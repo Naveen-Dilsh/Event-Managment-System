@@ -1,10 +1,10 @@
-package com.eventmanagment.event;
+package com.eventmanagement.ticketing;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class EventServiceApplicationTests {
+class TicketingServiceApplicationTests {
 
 	@Test
 	void contextLoads() {

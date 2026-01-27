@@ -8,11 +8,11 @@
 		<version>4.0.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.eventmanagment</groupId>
+	<groupId>com.eventmanagement</groupId>
 	<artifactId>ticketing-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>ticketing-service</name>
-	<description>Event Managment System </description>
+	<description>eventmanagement-project</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>25</java.version>
+		<java.version>17</java.version>
 	</properties>
 	<dependencies>
 		<dependency>

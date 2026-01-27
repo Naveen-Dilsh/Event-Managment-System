@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="b7b8221e-73ef-4972-bc47-a33b1088d84d" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/ticketing-service/src/main/java/com/eventmanagement/ticketing/client/EventServiceClient.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ticketing-service/src/main/java/com/eventmanagement/ticketing/config/RestTemplateConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ticketing-service/src/main/java/com/eventmanagement/ticketing/controller/TicketController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ticketing-service/src/main/java/com/eventmanagement/ticketing/dto/TicketRequestDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ticketing-service/src/main/java/com/eventmanagement/ticketing/dto/TicketResponseDTO.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ticketing-service/src/main/java/com/eventmanagement/ticketing/entity/Ticket.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ticketing-service/src/main/java/com/eventmanagement/ticketing/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ticketing-service/src/main/java/com/eventmanagement/ticketing/exception/InsufficientTicketsException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ticketing-service/src/main/java/com/eventmanagement/ticketing/exception/TicketNotFoundException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ticketing-service/src/main/java/com/eventmanagement/ticketing/repository/TicketRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ticketing-service/src/main/java/com/eventmanagement/ticketing/service/TicketService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ticketing-service/src/main/java/com/eventmanagement/ticketing/service/impl/TicketServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/event-service/.gitattributes" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/event-service/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/event-service/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/event-service/mvnw" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/event-service/mvnw.cmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/event-service/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/event-service/src/main/java/com/eventmanagment/event/EventServiceApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/event-service/src/test/java/com/eventmanagment/event/EventServiceApplicationTests.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticketing-service/.gitattributes" beforeDir="false" afterPath="$PROJECT_DIR$/ticketing-service/.gitattributes" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticketing-service/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/ticketing-service/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticketing-service/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/ticketing-service/.mvn/wrapper/maven-wrapper.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticketing-service/mvnw.cmd" beforeDir="false" afterPath="$PROJECT_DIR$/ticketing-service/mvnw.cmd" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticketing-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/ticketing-service/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticketing-service/src/main/java/com/eventmanagment/ticketing/TicketingServiceApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticketing-service/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/ticketing-service/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticketing-service/src/test/java/com/eventmanagment/ticketing/TicketingServiceApplicationTests.java" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;AshanMadusanka0&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Naveen-Dilsh/Event-Managment-System.git&quot;,
+    &quot;accountId&quot;: &quot;5129429b-e625-4ac8-9852-ec9c04130283&quot;
+  }
+}</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="38p491SeC890FaFIOE1nedL2tht" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "ticketing-service",
+    "junie.onboarding.icon.badge.shown": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "F:/Git hub my Projects/DEA II Group Project/Event Managment Backend",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="Event Managment Backend" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="Event Managment Backend" />
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-26cb7f24e5b0-intellij.indexing.shared.core-IU-253.29346.240" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-IU-253.29346.240" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="b7b8221e-73ef-4972-bc47-a33b1088d84d" name="Changes" comment="" />
+      <created>1769483024566</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1769483024566</updated>
+      <workItem from="1769483025833" duration="2001000" />
+      <workItem from="1769485063603" duration="36000" />
+      <workItem from="1769485128379" duration="1622000" />
+      <workItem from="1769489843676" duration="778000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
