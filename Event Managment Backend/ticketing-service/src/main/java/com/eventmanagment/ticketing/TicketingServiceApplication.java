@@ -1,4 +1,4 @@
-package com.eventmanagement.ticketing;
+package com.eventmanagment.ticketing;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
