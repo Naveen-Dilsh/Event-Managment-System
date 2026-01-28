@@ -1,4 +1,4 @@
 package com.eventmanagment.event.client;
 
-public class VenueServiceClient {
+public interface VenueServiceClient {
 }
