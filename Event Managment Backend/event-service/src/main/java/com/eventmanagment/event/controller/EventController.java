@@ -8,10 +8,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/events")
@@ -27,5 +26,17 @@ public class EventController {
         log.info("REST request to create event: {}", dto.getName());
         EventResponseDTO response = eventService.createEvent(dto);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<EventResponseDTO>> getAllEvents() {
+        List<EventResponseDTO> events = eventService.getAllEvents();
+        return ResponseEntity.ok(events);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<EventResponseDTO> getEventById(@PathVariable Long id) {
+        EventResponseDTO event = eventService.getEventById(id);
+        return ResponseEntity.ok(event);
     }
 }
