@@ -35,6 +35,7 @@ public class EventServiceImpl implements EventService {
         validator.validateEventDate(dto.getEventDate());
 
         // ToDo : Validate Venue Exist and has Sufficient Capacity ?-------> OpenFeign
+        validator.validateVenue(dto.getVenueId(), dto.getCapacity());
 
         // Create event entity
         Event event = eventMapper.mapToEntity(dto);
@@ -80,6 +81,9 @@ public class EventServiceImpl implements EventService {
         validator.validateEventDate(dto.getEventDate());
 
         // ToDo : If Venue is Changed Validate New venue Exist
+        if (!existEvent.getVenueId().equals(dto.getVenueId())) {
+            validator.validateVenue(dto.getVenueId(), dto.getCapacity());
+        }
 
         // Update event fields
         existEvent.setName(dto.getName());
