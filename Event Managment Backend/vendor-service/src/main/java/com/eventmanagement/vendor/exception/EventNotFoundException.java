@@ -3,14 +3,14 @@ package com.eventmanagement.vendor.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.NOT_FOUND)
-public class VendorNotFoundException extends RuntimeException {
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+public class EventNotFoundException extends RuntimeException {
 
-    public VendorNotFoundException(String message) {
+    public EventNotFoundException(String message) {
         super(message);
     }
 
-    public VendorNotFoundException(String message, Throwable cause) {
+    public EventNotFoundException(String message, Throwable cause) {
         super(message, cause);
     }
 }

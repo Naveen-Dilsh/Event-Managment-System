@@ -16,4 +16,12 @@ public interface EventService {
     // Get Event By ID
     EventResponseDTO getEventById(Long id);
 
+    // Update Event
+    EventResponseDTO updateEvent(Long id, EventRequestDTO dto);
+
+    // Delete Event
+    EventResponseDTO deleteEvent(Long id);
+
+    // Reduce available seats for an event (called by Booking Service)
+    void reduceAvailableSeats(Long eventId, Integer quantity);
 }
