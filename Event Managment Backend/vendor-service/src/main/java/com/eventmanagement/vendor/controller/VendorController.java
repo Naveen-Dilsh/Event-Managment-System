@@ -29,9 +29,12 @@ public class VendorController {
     @GetMapping("/{id}")
     public ResponseEntity<VendorResponseDTO> getVendorById(@PathVariable Long id) {
         VendorResponseDTO vendor = vendorService.getVendorById(id);
-        return ResponseEntity.ok(vendor); 
- T /api/vendors
-    @GetMapping ntity<List<VendorResponseDTO>> getAllVendors() {
+        return ResponseEntity.ok(vendor);
+    }
+
+    // READ ALL - GET /api/vendors
+    @GetMapping
+    public ResponseEntity<List<VendorResponseDTO>> getAllVendors() {
         List<VendorResponseDTO> vendors = vendorService.getAllVendors();
         return ResponseEntity.ok(vendors);
     }
@@ -41,8 +44,10 @@ public class VendorController {
     public ResponseEntity<List<VendorResponseDTO>> getVendorsByEventId(@PathVariable Long eventId) {
         List<VendorResponseDTO> vendors = vendorService.getVendorsByEventId(eventId);
         return ResponseEntity.ok(vendors);
-    } 
-    // READ BY TYPE - GET /api/vendors/type/{vendorType} pe/{vendorType}")
+    }
+
+    // READ BY TYPE - GET /api/vendors/type/{vendorType}
+    @GetMapping("/type/{vendorType}")
     public ResponseEntity<List<VendorResponseDTO>> getVendorsByType(@PathVariable String vendorType) {
         List<VendorResponseDTO> vendors = vendorService.getVendorsByType(vendorType);
         return ResponseEntity.ok(vendors);
@@ -70,4 +75,3 @@ public class VendorController {
         return ResponseEntity.noContent().build();
     }
 }
-      
