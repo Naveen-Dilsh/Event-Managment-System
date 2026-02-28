@@ -1,26 +1,21 @@
 package com.eventmanagement.booking_service.service;
 
-import com.eventmanagement.booking_service.entity.Booking;
+import com.eventmanagement.booking_service.dto.BookingRequestDTO;
+import com.eventmanagement.booking_service.dto.BookingResponseDTO;
 
 import java.util.List;
 
 public interface BookingService {
 
-    // Create a booking
-    Booking createBooking(Booking booking);
+    BookingResponseDTO createBooking(BookingRequestDTO dto);
 
-    // Get booking by ID
-    Booking getBookingById(Long id);
+    BookingResponseDTO getBookingById(Long id);
 
-    // Get booking by reference
-    Booking getBookingByReference(String reference);
+    BookingResponseDTO getBookingByReference(String reference);
 
-    // Get bookings by event
-    List<Booking> getBookingsByEventId(Long eventId);
+    List<BookingResponseDTO> getBookingsByEventId(Long eventId);
 
-    // Get bookings by attendee
-    List<Booking> getBookingsByAttendeeId(Long attendeeId);
+    List<BookingResponseDTO> getBookingsByAttendeeId(Long attendeeId);
 
-    // Cancel booking
-    Booking cancelBooking(Long bookingId);
+    BookingResponseDTO cancelBooking(Long bookingId);
 }
