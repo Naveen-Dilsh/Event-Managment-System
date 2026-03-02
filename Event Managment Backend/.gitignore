@@ -130,3 +130,6 @@ docker-compose.override.yml
 # Service-specific environment files
 **/application-local.yml
 **/application-dev.yml
+
+# Ignore venue-service (friend's work)
+venue-service/
