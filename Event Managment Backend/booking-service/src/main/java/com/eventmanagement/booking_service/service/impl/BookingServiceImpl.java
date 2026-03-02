@@ -1,69 +1,160 @@
 package com.eventmanagement.booking_service.service.impl;
 
-
-import com.eventmanagement.booking_service.dto.BookingRequestDTO;
-import com.eventmanagement.booking_service.dto.BookingResponseDTO;
+import com.eventmanagement.booking_service.client.EventServiceClient;
+import com.eventmanagement.booking_service.client.PaymentServiceClient;
+import com.eventmanagement.booking_service.client.TicketingServiceClient;
+import com.eventmanagement.booking_service.dto.*;
 import com.eventmanagement.booking_service.entity.Booking;
+import com.eventmanagement.booking_service.exception.BookingNotFoundException;
+import com.eventmanagement.booking_service.exception.InsufficientTicketsException;
+import com.eventmanagement.booking_service.exception.PaymentFailedException;
 import com.eventmanagement.booking_service.repository.BookingRepository;
-
 import com.eventmanagement.booking_service.service.BookingService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
+    private final EventServiceClient eventServiceClient;
+    private final TicketingServiceClient ticketingServiceClient;
+    private final PaymentServiceClient paymentServiceClient;
 
-    public BookingServiceImpl(BookingRepository bookingRepository) {
+    public BookingServiceImpl(BookingRepository bookingRepository,
+                               EventServiceClient eventServiceClient,
+                               TicketingServiceClient ticketingServiceClient,
+                               PaymentServiceClient paymentServiceClient) {
         this.bookingRepository = bookingRepository;
+        this.eventServiceClient = eventServiceClient;
+        this.ticketingServiceClient = ticketingServiceClient;
+        this.paymentServiceClient = paymentServiceClient;
     }
 
-    // ✅ CREATE BOOKING
+    // =====================================================================
+    // CREATE BOOKING - full transactional workflow with inter-service calls
+    // =====================================================================
     @Override
+    @Transactional
     public BookingResponseDTO createBooking(BookingRequestDTO dto) {
 
-        Booking booking = mapToEntity(dto);
+        // Step 1: Validate event exists via Event Service
+        EventDTO event;
+        try {
+            event = eventServiceClient.getEventById(dto.getEventId());
+        } catch (Exception e) {
+            throw new RuntimeException("Event not found with id: " + dto.getEventId());
+        }
 
-        // Business defaults
-        booking.setStatus("PENDING");
-        booking.setPaymentStatus("UNPAID");
-        booking.setBookingDate(LocalDateTime.now());
+        // Step 2: Validate ticket and retrieve pricing info via Ticketing Service
+        TicketDTO ticket;
+        try {
+            ticket = ticketingServiceClient.getTicketById(dto.getTicketId());
+        } catch (Exception e) {
+            throw new RuntimeException("Ticket not found with id: " + dto.getTicketId());
+        }
 
-        // Generate unique booking reference
-        booking.setBookingReference(
-                "BK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase()
-        );
+        // Step 3: Check sufficient ticket availability
+        if (ticket.getAvailableQuantity() < dto.getQuantity()) {
+            throw new InsufficientTicketsException(
+                    "Only " + ticket.getAvailableQuantity() + " tickets available. Requested: " + dto.getQuantity()
+            );
+        }
+
+        // Step 4: Calculate total price (quantity x ticket price)
+        double totalPrice = ticket.getPrice() * dto.getQuantity();
+
+        // Step 5: Persist booking with PENDING status
+        Booking booking = Booking.builder()
+                .eventId(dto.getEventId())
+                .ticketId(dto.getTicketId())
+                .attendeeId(dto.getAttendeeId())
+                .quantity(dto.getQuantity())
+                .totalPrice(totalPrice)
+                .customerName(dto.getCustomerName())
+                .customerEmail(dto.getCustomerEmail())
+                .customerPhone(dto.getCustomerPhone())
+                .specialRequests(dto.getSpecialRequests())
+                .status("PENDING")
+                .paymentStatus("UNPAID")
+                .build();
 
         Booking savedBooking = bookingRepository.save(booking);
 
-        return mapToResponse(savedBooking);
+        try {
+            // Step 6: Reduce ticket quantity in Ticketing Service
+            ticketingServiceClient.reduceTicketQuantity(
+                    dto.getTicketId(),
+                    Map.of("quantity", dto.getQuantity())
+            );
+
+            // Step 7: Process payment via Payment Service
+            PaymentRequestDTO paymentRequest = new PaymentRequestDTO();
+            paymentRequest.setBookingId(savedBooking.getId());
+            paymentRequest.setAmount(totalPrice);
+            paymentRequest.setPaymentMethod("CREDIT_CARD");
+
+            PaymentResponseDTO payment = paymentServiceClient.processPayment(paymentRequest);
+
+            // Step 8: Confirm booking if payment succeeded
+            if ("SUCCESS".equals(payment.getPaymentStatus())) {
+                savedBooking.setStatus("CONFIRMED");
+                savedBooking.setPaymentStatus("PAID");
+                savedBooking.setPaymentId(payment.getId());
+            } else {
+                savedBooking.setStatus("CANCELLED");
+                savedBooking.setPaymentStatus("FAILED");
+                bookingRepository.save(savedBooking);
+                throw new PaymentFailedException("Payment was rejected by the payment service");
+            }
+
+        } catch (PaymentFailedException | InsufficientTicketsException e) {
+            throw e;
+        } catch (Exception e) {
+            // Compensate: mark booking as cancelled if any downstream call fails
+            savedBooking.setStatus("CANCELLED");
+            savedBooking.setPaymentStatus("FAILED");
+            bookingRepository.save(savedBooking);
+            throw new PaymentFailedException("Booking failed due to a downstream error: " + e.getMessage());
+        }
+
+        return mapToResponse(bookingRepository.save(savedBooking));
     }
 
-    // ✅ GET BY ID
+    // =====================================================================
+    // READ OPERATIONS
+    // =====================================================================
     @Override
+    @Transactional(readOnly = true)
     public BookingResponseDTO getBookingById(Long id) {
         Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + id));
-
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found with id: " + id));
         return mapToResponse(booking);
     }
 
-    // ✅ GET BY REFERENCE
     @Override
-    public BookingResponseDTO getBookingByReference(String reference) {
-        Booking booking = bookingRepository.findByBookingReference(reference)
-                .orElseThrow(() -> new RuntimeException("Booking not found with reference: " + reference));
+    @Transactional(readOnly = true)
+    public List<BookingResponseDTO> getAllBookings() {
+        return bookingRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
 
+    @Override
+    @Transactional(readOnly = true)
+    public BookingResponseDTO getBookingByReference(String bookingReference) {
+        Booking booking = bookingRepository.findByBookingReference(bookingReference)
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found with reference: " + bookingReference));
         return mapToResponse(booking);
     }
 
-    // ✅ GET BY EVENT
     @Override
+    @Transactional(readOnly = true)
     public List<BookingResponseDTO> getBookingsByEventId(Long eventId) {
         return bookingRepository.findByEventId(eventId)
                 .stream()
@@ -71,8 +162,8 @@ public class BookingServiceImpl implements BookingService {
                 .collect(Collectors.toList());
     }
 
-    // ✅ GET BY ATTENDEE
     @Override
+    @Transactional(readOnly = true)
     public List<BookingResponseDTO> getBookingsByAttendeeId(Long attendeeId) {
         return bookingRepository.findByAttendeeId(attendeeId)
                 .stream()
@@ -80,42 +171,71 @@ public class BookingServiceImpl implements BookingService {
                 .collect(Collectors.toList());
     }
 
-    // ✅ CANCEL BOOKING
+    // =====================================================================
+    // CANCEL BOOKING - attempts to restore ticket quantity
+    // =====================================================================
     @Override
-    public BookingResponseDTO cancelBooking(Long bookingId) {
-
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+    @Transactional
+    public BookingResponseDTO cancelBooking(Long id) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found with id: " + id));
 
         if ("CANCELLED".equals(booking.getStatus())) {
             throw new RuntimeException("Booking is already cancelled");
         }
 
+        // Best-effort restore of ticket quantity in Ticketing Service
+        try {
+            ticketingServiceClient.restoreTicketQuantity(
+                    booking.getTicketId(),
+                    Map.of("quantity", booking.getQuantity())
+            );
+        } catch (Exception e) {
+            // Log and continue - cancellation proceeds regardless
+            System.err.println("Warning: could not restore ticket quantity for booking " + id + ": " + e.getMessage());
+        }
+
         booking.setStatus("CANCELLED");
+        booking.setPaymentStatus("REFUNDED");
 
-        Booking updatedBooking = bookingRepository.save(booking);
-
-        return mapToResponse(updatedBooking);
+        return mapToResponse(bookingRepository.save(booking));
     }
 
-    // ======================================================
-    // ================= MAPPER METHODS =====================
-    // ======================================================
+    // =====================================================================
+    // CONFIRM BOOKING - manually confirm a PENDING booking
+    // =====================================================================
+    @Override
+    @Transactional
+    public BookingResponseDTO confirmBooking(Long id) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found with id: " + id));
 
-    private Booking mapToEntity(BookingRequestDTO dto) {
-        return Booking.builder()
-                .eventId(dto.getEventId())
-                .ticketId(dto.getTicketId())
-                .attendeeId(dto.getAttendeeId())
-                .quantity(dto.getQuantity())
-                .totalPrice(dto.getTotalPrice())
-                .customerName(dto.getCustomerName())
-                .customerEmail(dto.getCustomerEmail())
-                .customerPhone(dto.getCustomerPhone())
-                .specialRequests(dto.getSpecialRequests())
-                .build();
+        if ("CANCELLED".equals(booking.getStatus())) {
+            throw new RuntimeException("Cannot confirm a cancelled booking");
+        }
+        if ("CONFIRMED".equals(booking.getStatus())) {
+            throw new RuntimeException("Booking is already confirmed");
+        }
+
+        booking.setStatus("CONFIRMED");
+
+        return mapToResponse(bookingRepository.save(booking));
     }
 
+    // =====================================================================
+    // DELETE BOOKING
+    // =====================================================================
+    @Override
+    @Transactional
+    public void deleteBooking(Long id) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found with id: " + id));
+        bookingRepository.delete(booking);
+    }
+
+    // =====================================================================
+    // MAPPER HELPER
+    // =====================================================================
     private BookingResponseDTO mapToResponse(Booking booking) {
         return BookingResponseDTO.builder()
                 .id(booking.getId())

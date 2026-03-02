@@ -19,15 +19,11 @@ public class BookingRequestDTO {
     @Min(value = 1, message = "quantity must be at least 1")
     private Integer quantity;
 
-    @NotNull(message = "totalPrice is required")
-    @Positive(message = "totalPrice must be positive")
-    private Double totalPrice;
-
     @NotBlank(message = "customerName is required")
     private String customerName;
 
     @NotBlank(message = "customerEmail is required")
-    @Email(message = "customerEmail must be valid")
+    @Email(message = "customerEmail must be a valid email address")
     private String customerEmail;
 
     @NotBlank(message = "customerPhone is required")
