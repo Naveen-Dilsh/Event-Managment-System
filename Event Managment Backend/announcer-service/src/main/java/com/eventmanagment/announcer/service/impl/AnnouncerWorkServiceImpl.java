@@ -1,0 +1,4 @@
+package com.eventmanagment.announcer.service.impl;
+
+public class AnnouncerWorkServiceImpl {
+}

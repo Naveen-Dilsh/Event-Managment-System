@@ -21,7 +21,7 @@ public class Analytics {
 
     @Column(name = "report_type", nullable = false)
     private String reportType;
-    // Example: EVENT_SUMMARY, REVENUE_REPORT, DASHBOARD
+    //  EVENT_SUMMARY, REVENUE_REPORT, DASHBOARD
 
     @Column(name = "event_id")
     private Long eventId;
