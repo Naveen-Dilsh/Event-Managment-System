@@ -1,9 +1,12 @@
 package com.eventmanagement.booking_service.entity;
 
+
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.Year;
+import java.util.UUID;
 
 @Entity
 @Table(name = "bookings")
@@ -73,6 +76,10 @@ public class Booking {
         this.updatedAt = now;
         if (this.bookingDate == null) {
             this.bookingDate = now;
+        }
+        if (this.bookingReference == null) {
+            this.bookingReference = "BK-" + Year.now().getValue() + "-"
+                    + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         }
     }
 
