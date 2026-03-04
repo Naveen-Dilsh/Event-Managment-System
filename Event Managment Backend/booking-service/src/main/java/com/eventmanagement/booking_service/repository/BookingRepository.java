@@ -1,5 +1,6 @@
 package com.eventmanagement.booking_service.repository;
 
+
 import com.eventmanagement.booking_service.entity.Booking;
 import org.springframework.data.jpa.repository.JpaRepository;
 
