@@ -13,6 +13,13 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation of the AttendeeService interface.
+ * This service class contains the business logic for managing
+   attendee operations such as creating, retrieving, updating,
+   and deleting attendees.
+ */
+
 @Service
 public class AttendeeServiceImpl implements AttendeeService {
 
@@ -29,14 +36,20 @@ public class AttendeeServiceImpl implements AttendeeService {
             throw new DuplicateEmailException("Email already in use: " + dto.getEmail());
         }
 
-        //Map DTO to Entity
+        /**
+         * Map DTO to Entity
+         */
         Attendee attendee = new Attendee();
         BeanUtils.copyProperties(dto, attendee);
 
-        //Save to Database
+        /**
+         * Save to Database
+         */
         Attendee savedAttendee = attendeeRepository.save(attendee);
 
-        //Return Response DTO
+        /**
+         * Return Response DTO
+         */
         return mapToResponseDTO(savedAttendee);
     }
 
@@ -66,7 +79,9 @@ public class AttendeeServiceImpl implements AttendeeService {
         Attendee existingAttendee = attendeeRepository.findById(id)
                 .orElseThrow(() -> new AttendeeNotFoundException("Attendee not found with id: " + id));
 
-        // Update fields (excluding ID and CreatedAt)
+        /**
+         * Update fields (excluding ID and CreatedAt)
+         */
         BeanUtils.copyProperties(dto, existingAttendee, "id", "createdAt");
 
         Attendee updatedAttendee = attendeeRepository.save(existingAttendee);
@@ -81,7 +96,9 @@ public class AttendeeServiceImpl implements AttendeeService {
         attendeeRepository.deleteById(id);
     }
 
-    // Helper method to convert Entity -> DTO
+    /**
+     * Helper method to convert Entity -> DTO
+     */
     private AttendeeResponseDTO mapToResponseDTO(Attendee attendee) {
         AttendeeResponseDTO responseDTO = new AttendeeResponseDTO();
         BeanUtils.copyProperties(attendee, responseDTO);

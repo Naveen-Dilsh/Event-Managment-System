@@ -10,6 +10,11 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * This class is mapped to the "attendees" table in the database and stores
+ * personal and contact information of individuals who register for events.
+ */
+
 @Entity
 @Table(name = "attendees")
 @Data
