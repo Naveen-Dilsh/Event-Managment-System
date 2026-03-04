@@ -3,18 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Sparkles, Mail, Lock, User, Shield } from "lucide-react";
+import { Loader2, Sparkles, Mail, Lock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { userApi } from "@/lib/api";
 import type { UserRegisterRequest } from "@/lib/types";
@@ -25,7 +18,7 @@ export default function RegisterPage() {
         fullName: "",
         email: "",
         password: "",
-        role: "ATTENDEE",
+        role: "ATTENDEE", // Always ATTENDEE — admins are created in DB directly
     });
     const [loading, setLoading] = useState(false);
 
@@ -40,8 +33,8 @@ export default function RegisterPage() {
         setLoading(true);
         try {
             await userApi.register(form);
-            toast.success("Account created successfully!");
-            router.push("/login"); // After successful registration, head to login
+            toast.success("Account created! Please sign in.");
+            router.push("/login");
         } catch (err: any) {
             toast.error(err.message || "Failed to register account");
         } finally {
@@ -108,25 +101,10 @@ export default function RegisterPage() {
                                 />
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="role">Role</Label>
-                            <div className="relative">
-                                <Shield className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground z-10" />
-                                <Select
-                                    value={form.role}
-                                    onValueChange={(val: "ADMIN" | "ORGANIZER" | "ATTENDEE") => setForm({ ...form, role: val })}
-                                    disabled={loading}
-                                >
-                                    <SelectTrigger className="pl-9 bg-background/50 border-border/50 focus:border-violet-500">
-                                        <SelectValue placeholder="Select a role" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="ATTENDEE">Attendee</SelectItem>
-                                        <SelectItem value="ORGANIZER">Organizer</SelectItem>
-                                        <SelectItem value="ADMIN">Admin</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                        <div className="rounded-lg border border-border/30 bg-violet-500/5 px-4 py-2.5">
+                            <p className="text-xs text-muted-foreground">
+                                You will be registered as an <span className="font-semibold text-violet-400">Attendee</span>. Admins are managed separately.
+                            </p>
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col space-y-4">

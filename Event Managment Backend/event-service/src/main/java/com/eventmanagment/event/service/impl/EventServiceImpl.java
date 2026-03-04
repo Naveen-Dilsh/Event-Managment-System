@@ -97,6 +97,10 @@ public class EventServiceImpl implements EventService {
         existEvent.setOrganizerName(dto.getOrganizerName());
         existEvent.setOrganizerContact(dto.getOrganizerContact());
         existEvent.setImageUrl(dto.getImageUrl());
+        // Update status if provided in the request
+        if (dto.getStatus() != null) {
+            existEvent.setStatus(Event.EventStatus.valueOf(dto.getStatus().name()));
+        }
         existEvent.setUpdatedAt(LocalDateTime.now());
 
         // Save to Database
