@@ -6,6 +6,14 @@ import lombok.Data;
 
 import java.time.LocalDate;
 
+/**
+ * Data Transfer Object (DTO) used to receive attendee data
+   from client requests when creating or updating an attendee.
+
+ * This class contains validation rules to ensure that the
+   required fields are properly provided by the client.
+ */
+
 @Data
 public class AttendeeRequestDTO {
 

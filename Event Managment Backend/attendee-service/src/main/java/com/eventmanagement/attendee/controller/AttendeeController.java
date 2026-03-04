@@ -58,7 +58,7 @@ public class AttendeeController {
     public ResponseEntity<AttendeeResponseDTO> getAttendeeById(@PathVariable Long id) {
         return ResponseEntity.ok(attendeeService.getAttendeeById(id));
     }
-    
+
     /**
      * Retrieves an attendee by their email address.
      */
