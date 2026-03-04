@@ -29,7 +29,7 @@ const categories = [
 ];
 
 export default function UserEventsPage() {
-    const { user } = useAuth();
+    const { user, isAdmin } = useAuth();
     const [events, setEvents] = useState<EventResponse[]>([]);
     const [venues, setVenues] = useState<Record<number, VenueResponse>>({});
     const [loading, setLoading] = useState(true);
@@ -74,12 +74,41 @@ export default function UserEventsPage() {
             {/* Hero Header */}
             <div className="relative overflow-hidden border-b border-border/50 bg-gradient-to-br from-background via-violet-950/10 to-indigo-950/10">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-600/10 via-transparent to-transparent" />
-                <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-600/20">
-                            <Sparkles className="h-5 w-5 text-white" />
+                <div className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+                    {/* Top Navigation Bar */}
+                    <div className="flex items-center justify-between mb-8 pb-4 border-b border-border/30">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-600/20">
+                                <Sparkles className="h-5 w-5 text-white" />
+                            </div>
+                            <span className="text-lg font-bold gradient-text">EventFlow</span>
                         </div>
-                        <span className="text-sm font-medium text-violet-400">EventFlow</span>
+                        <div className="flex items-center gap-4">
+                            <Link href="/my-bookings" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                                My Bookings
+                            </Link>
+                            <Link href="/my-tickets" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                                My Tickets
+                            </Link>
+                            <Link href="/loyalty-points" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                                Loyalty Points
+                            </Link>
+                            <Link href="/profile" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                                Profile
+                            </Link>
+                            {isAdmin && (
+                                <Link href="/admin/events" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                                    Admin Dashboard
+                                </Link>
+                            )}
+                            <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-500 hover:bg-red-500/10 transition-colors" onClick={() => {
+                                localStorage.removeItem("token");
+                                localStorage.removeItem("user");
+                                window.location.href = "/login";
+                            }}>
+                                Logout
+                            </Button>
+                        </div>
                     </div>
                     <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
                         Welcome back,{" "}
