@@ -15,7 +15,9 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Handle specific exception to Attendee Not Found
+    /**
+     * Handle specific exception to Attendee Not Found
+     */
     @ExceptionHandler(AttendeeNotFoundException.class)
     public ResponseEntity<ErrorDetails> handleAttendeeNotFoundException(AttendeeNotFoundException exception, WebRequest webRequest) {
         ErrorDetails errorDetails = new ErrorDetails(
@@ -27,7 +29,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
 
-    // Handle specific exception to Duplicate Email
+    /**
+     * Handle specific exception to Duplicate Email
+     */
     @ExceptionHandler(DuplicateEmailException.class)
     public ResponseEntity<ErrorDetails> handleDuplicateEmailException(DuplicateEmailException exception, WebRequest webRequest) {
         ErrorDetails errorDetails = new ErrorDetails(
@@ -39,7 +43,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);
     }
 
-    // Handle Validation Errors (missing @NotBlank fields in DTO)
+    /**
+     * Handle Validation Errors (missing @NotBlank fields in DTO)
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
@@ -51,7 +57,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
-    // Handle global generic exceptions
+    /**
+     * Handle global generic exceptions
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorDetails> handleGlobalException(Exception exception, WebRequest webRequest) {
         ErrorDetails errorDetails = new ErrorDetails(
@@ -63,7 +71,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    // Inner class for custom error structure
+    /**
+     * Inner class for custom error structure
+     */
     public static class ErrorDetails {
         private LocalDateTime timestamp;
         private String message;
@@ -77,7 +87,9 @@ public class GlobalExceptionHandler {
             this.errorCode = errorCode;
         }
 
-        // Getters
+        /**
+         *  Getters
+         */
         public LocalDateTime getTimestamp() { return timestamp; }
         public String getMessage() { return message; }
         public String getDetails() { return details; }
