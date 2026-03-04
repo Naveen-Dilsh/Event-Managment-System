@@ -49,6 +49,9 @@ public class EventRequestDTO {
 
     private String imageUrl;
 
+    // Optional — assign an announcer to this event
+    private Long announcerId;
+
     // Optional status — used when updating an existing event
     private EventStatus status;
 

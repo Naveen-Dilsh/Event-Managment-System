@@ -30,6 +30,9 @@ public class Event {
     @Column(name = "venue_id", nullable = false)
     private Long venueId; // Foreign key reference to Venue Service
 
+    @Column(name = "announcer_id")
+    private Long announcerId; // Foreign key reference to Announcer Service (optional)
+
     @Column(name = "category", nullable = false, length = 100)
     private String category;
 
