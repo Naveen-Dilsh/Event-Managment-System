@@ -11,6 +11,7 @@ export interface EventRequest {
   organizerName: string;
   organizerContact: string;
   imageUrl?: string;
+  status?: "DRAFT" | "PUBLISHED" | "ONGOING" | "COMPLETED" | "CANCELLED" | "POSTPONED";
 }
 
 export interface EventResponse extends EventRequest {

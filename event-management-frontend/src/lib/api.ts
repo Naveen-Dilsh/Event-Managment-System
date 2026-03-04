@@ -1,15 +1,15 @@
 const SERVICE_URLS = {
-    event: "",
-    ticketing: "",
-    booking: "",
-    payment: "",
-    attendee: "",
-    venue: "",
-    sponsorship: "",
-    loyalty: "",
-    vendor: "",
-    announcer: "",
-    users: "",
+    event: "http://localhost:8081",   // event-service
+    ticketing: "http://localhost:8082",   // ticketing-service
+    booking: "http://localhost:8083",   // booking-service
+    payment: "http://localhost:8084",   // payment-service
+    attendee: "http://localhost:8085",   // attendee-service
+    venue: "http://localhost:8086",   // venue-service
+    sponsorship: "http://localhost:8087",   // sponsorship-service
+    loyalty: "http://localhost:8088",   // loyalty-service
+    vendor: "http://localhost:8089",   // vendor-service
+    announcer: "http://localhost:8089",   // announcer-service (same port as vendor)
+    users: "http://localhost:8090",   // user-service
 };
 
 async function apiRequest<T>(
@@ -21,8 +21,21 @@ async function apiRequest<T>(
         ...options,
     });
     if (!res.ok) {
-        const error = await res.text().catch(() => "Unknown error");
-        throw new Error(`API Error ${res.status}: ${error}`);
+        const rawText = await res.text().catch(() => "");
+        let friendlyMessage = "Something went wrong. Please try again.";
+        try {
+            const errorJson = JSON.parse(rawText);
+            // Spring Boot validation errors have an 'errors' array with field-level messages
+            if (errorJson.errors && errorJson.errors.length > 0) {
+                friendlyMessage = errorJson.errors[0].defaultMessage || friendlyMessage;
+            } else if (errorJson.message) {
+                // General Spring Boot error message
+                friendlyMessage = errorJson.message;
+            }
+        } catch {
+            // Response wasn't JSON — use a generic message
+        }
+        throw new Error(friendlyMessage);
     }
     if (res.status === 204) return undefined as T;
     return res.json();

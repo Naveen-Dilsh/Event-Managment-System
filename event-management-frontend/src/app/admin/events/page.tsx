@@ -61,6 +61,7 @@ const emptyForm: EventRequest = {
     organizerName: "",
     organizerContact: "",
     imageUrl: "",
+    status: undefined,
 };
 
 const statusColors: Record<string, string> = {
@@ -167,6 +168,7 @@ export default function EventsPage() {
             organizerName: event.organizerName || "",
             organizerContact: event.organizerContact || "",
             imageUrl: event.imageUrl || "",
+            status: event.status,
         });
         setDialogOpen(true);
     };
@@ -560,6 +562,28 @@ export default function EventsPage() {
                                 className="bg-background/50"
                             />
                         </div>
+                        {editingEvent && (
+                            <div className="space-y-2">
+                                <Label>Status *</Label>
+                                <Select
+                                    value={form.status || ""}
+                                    onValueChange={(val) =>
+                                        setForm({ ...form, status: val as EventRequest["status"] })
+                                    }
+                                >
+                                    <SelectTrigger className="bg-background/50">
+                                        <SelectValue placeholder="Select status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {Object.keys(statusColors).map((s) => (
+                                            <SelectItem key={s} value={s}>
+                                                {s}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDialogOpen(false)}>
