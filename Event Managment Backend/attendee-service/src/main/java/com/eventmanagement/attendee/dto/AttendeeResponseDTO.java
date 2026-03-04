@@ -5,6 +5,11 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * Data Transfer Object (DTO) used to send attendee data
+   from the server to the client as a response.
+ */
+
 @Data
 public class AttendeeResponseDTO {
 

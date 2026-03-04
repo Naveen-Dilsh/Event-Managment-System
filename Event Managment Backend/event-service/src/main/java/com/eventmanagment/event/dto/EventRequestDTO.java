@@ -49,8 +49,11 @@ public class EventRequestDTO {
 
     private String imageUrl;
 
+    // Optional status — used when updating an existing event
+    private EventStatus status;
+
     // Enum for Event Status
-    private enum EventStatus {
+    public enum EventStatus {
         DRAFT,
         PUBLISHED,
         ONGOING,
