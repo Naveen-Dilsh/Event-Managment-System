@@ -81,11 +81,15 @@ export default function TicketsPage() {
     const handleSave = async () => {
         setSaving(true);
         try {
+            const payload = { ...form };
+            if (payload.validFrom && payload.validFrom.length === 16) payload.validFrom += ":00";
+            if (payload.validUntil && payload.validUntil.length === 16) payload.validUntil += ":00";
+
             if (editing) {
-                await ticketApi.update(editing.id, form);
+                await ticketApi.update(editing.id, payload);
                 toast.success("Ticket updated successfully");
             } else {
-                await ticketApi.create(form);
+                await ticketApi.create(payload);
                 toast.success("Ticket created successfully");
             }
             setDialogOpen(false); await load();

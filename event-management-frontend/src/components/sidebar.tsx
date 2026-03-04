@@ -28,17 +28,11 @@ import {
 } from "@/components/ui/tooltip";
 
 const navItems = [
-    { href: "/", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/events", label: "Events", icon: CalendarDays },
-    { href: "/venues", label: "Venues", icon: MapPin },
-    { href: "/tickets", label: "Tickets", icon: Ticket },
-    { href: "/attendees", label: "Attendees", icon: Users },
-    { href: "/bookings", label: "Bookings", icon: ClipboardList },
-    { href: "/payments", label: "Payments", icon: CreditCard },
-    { href: "/vendors", label: "Vendors", icon: Store },
-    { href: "/sponsorships", label: "Sponsorships", icon: Award },
-    { href: "/loyalty", label: "Loyalty", icon: Heart },
-    { href: "/announcers", label: "Announcers", icon: Mic },
+    { href: "/browse", label: "Browse Events", icon: CalendarDays },
+    { href: "/my-bookings", label: "My Bookings", icon: ClipboardList },
+    { href: "/my-tickets", label: "My Tickets", icon: Ticket },
+    { href: "/my-loyalty", label: "Loyalty", icon: Heart },
+    { href: "/profile", label: "Profile", icon: Users },
 ];
 
 export function Sidebar() {
