@@ -46,8 +46,8 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { eventApi } from "@/lib/api";
-import type { EventRequest, EventResponse } from "@/lib/types";
+import { eventApi, announcerApi } from "@/lib/api";
+import type { EventRequest, EventResponse, AnnouncerResponse } from "@/lib/types";
 
 const emptyForm: EventRequest = {
     name: "",
@@ -62,6 +62,7 @@ const emptyForm: EventRequest = {
     organizerContact: "",
     imageUrl: "",
     status: undefined,
+    announcerId: undefined,
 };
 
 const statusColors: Record<string, string> = {
@@ -107,6 +108,7 @@ const availableColumns = [
 
 export default function EventsPage() {
     const [events, setEvents] = useState<EventResponse[]>([]);
+    const [announcers, setAnnouncers] = useState<AnnouncerResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [filterCategory, setFilterCategory] = useState("");
@@ -124,11 +126,15 @@ export default function EventsPage() {
 
     const loadEvents = useCallback(async () => {
         try {
-            const data = await eventApi.getAll();
-            setEvents(data);
+            const [eventsData, announcersData] = await Promise.all([
+                eventApi.getAll(),
+                announcerApi.getAll()
+            ]);
+            setEvents(eventsData);
+            setAnnouncers(announcersData);
         } catch (err: any) {
-            console.error("Failed to load events:", err);
-            toast.error(err.message || "Failed to load events");
+            console.error("Failed to load events/announcers:", err);
+            toast.error(err.message || "Failed to load events/announcers");
         } finally {
             setLoading(false);
         }
@@ -169,6 +175,7 @@ export default function EventsPage() {
             organizerContact: event.organizerContact || "",
             imageUrl: event.imageUrl || "",
             status: event.status,
+            announcerId: event.announcerId,
         });
         setDialogOpen(true);
     };
@@ -584,6 +591,27 @@ export default function EventsPage() {
                                 </Select>
                             </div>
                         )}
+                        <div className="space-y-2">
+                            <Label>Announcer</Label>
+                            <Select
+                                value={form.announcerId ? form.announcerId.toString() : "none"}
+                                onValueChange={(val) =>
+                                    setForm({ ...form, announcerId: val === "none" ? undefined : Number(val) })
+                                }
+                            >
+                                <SelectTrigger className="bg-background/50">
+                                    <SelectValue placeholder="Select announcer (optional)" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">None</SelectItem>
+                                    {announcers.map((announcer) => (
+                                        <SelectItem key={announcer.id} value={announcer.id.toString()}>
+                                            {announcer.fullName}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDialogOpen(false)}>
