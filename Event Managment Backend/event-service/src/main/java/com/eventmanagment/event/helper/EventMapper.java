@@ -21,6 +21,7 @@ public class EventMapper {
         event.setOrganizerName(dto.getOrganizerName());
         event.setOrganizerContact(dto.getOrganizerContact());
         event.setImageUrl(dto.getImageUrl());
+        event.setAnnouncerId(dto.getAnnouncerId());
         return event;
     }
 
@@ -33,6 +34,7 @@ public class EventMapper {
         dto.setStartTime(event.getStartTime());
         dto.setEndTime(event.getEndTime());
         dto.setVenueId(event.getVenueId());
+        dto.setAnnouncerId(event.getAnnouncerId());
         dto.setCategory(event.getCategory());
         dto.setCapacity(event.getCapacity());
         dto.setAvailableSeats(event.getAvailableSeats());
