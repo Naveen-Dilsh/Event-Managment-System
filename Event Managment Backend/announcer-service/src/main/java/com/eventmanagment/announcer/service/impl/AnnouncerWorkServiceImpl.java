@@ -11,6 +11,7 @@ import com.eventmanagment.announcer.service.AnnouncerWorkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,13 +27,11 @@ public class AnnouncerWorkServiceImpl implements AnnouncerWorkService {
     @Override
     public AnnouncerWorkResponseDTO addWork(AnnouncerWorkRequestDTO dto) {
 
-        //Validate Announcer exists
+        // Validate Announcer exists
         Announcer announcer = announcerRepository.findById(dto.getAnnouncerId())
-                .orElseThrow(() ->
-                        new AnnouncerNotFoundException("Announcer not found: " + dto.getAnnouncerId())
-                );
+                .orElseThrow(() -> new AnnouncerNotFoundException("Announcer not found: " + dto.getAnnouncerId()));
 
-        //Validate Event exists (Feign Call)
+        // Validate Event exists (Feign Call)
         EventDTO event;
         try {
             event = eventServiceClient.getEventById(dto.getEventId());
@@ -40,7 +39,7 @@ public class AnnouncerWorkServiceImpl implements AnnouncerWorkService {
             throw new RuntimeException("Event not found with ID: " + dto.getEventId());
         }
 
-        //  Create Work
+        // Create Work
         AnnouncerWork work = new AnnouncerWork();
         work.setAnnouncerId(dto.getAnnouncerId());
         work.setEventId(dto.getEventId());
@@ -73,13 +72,12 @@ public class AnnouncerWorkServiceImpl implements AnnouncerWorkService {
     public List<AnnouncerWorkResponseDTO> getWorksByAnnouncer(Long announcerId) {
 
         Announcer announcer = announcerRepository.findById(announcerId)
-                .orElseThrow(() ->
-                        new AnnouncerNotFoundException("Announcer not found: " + announcerId)
-                );
+                .orElseThrow(() -> new AnnouncerNotFoundException("Announcer not found: " + announcerId));
 
         return workRepository.findByAnnouncerId(announcerId)
                 .stream()
-                .sorted((w1, w2) -> w2.getEventDate().compareTo(w1.getEventDate()))
+                .sorted(Comparator.comparing(AnnouncerWork::getEventDate,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
                 .map(work -> mapToDTO(work, announcer.getFullName()))
                 .collect(Collectors.toList());
     }
