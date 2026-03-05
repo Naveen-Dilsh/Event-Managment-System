@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { bookingApi, eventApi, ticketApi, attendeeApi } from "@/lib/api";
+import { bookingApi, eventApi, ticketApi, attendeeApi, paymentApi } from "@/lib/api";
 import type { BookingResponse, EventResponse, TicketResponse, BookingRequest } from "@/lib/types";
 import { useAuth } from "@/lib/auth-context";
 
@@ -51,15 +51,20 @@ export default function MyBookingsPage() {
     const [cancelDialogId, setCancelDialogId] = useState<number | null>(null);
     const [saving, setSaving] = useState(false);
     const [attendeeId, setAttendeeId] = useState<number | null>(null);
+    const [payingBooking, setPayingBooking] = useState<BookingResponse | null>(null);
+    const [paying, setPaying] = useState(false);
 
     const [bookForm, setBookForm] = useState<Partial<BookingRequest>>({
         eventId: bookEventId ? Number(bookEventId) : undefined,
         quantity: 1,
-        customerName: user?.fullName || "",
+        customerName: user?.fullName?.split(" ")[0] || "",
         customerEmail: user?.email || "",
         customerPhone: "",
         specialRequests: "",
     });
+    const [customerLastName, setCustomerLastName] = useState(
+        user?.fullName?.split(" ").slice(1).join(" ") || ""
+    );
 
     const loadData = useCallback(async () => {
         try {
@@ -111,16 +116,20 @@ export default function MyBookingsPage() {
             if (!aId) {
                 // Create attendee profile on first booking
                 const att = await attendeeApi.create({
-                    firstName: (user?.fullName || "").split(" ")[0] || "User",
-                    lastName: (user?.fullName || "").split(" ").slice(1).join(" ") || "",
+                    firstName: bookForm.customerName || (user?.fullName || "").split(" ")[0] || "User",
+                    lastName: customerLastName || "",
                     email: user?.email || "",
                     phone: bookForm.customerPhone,
                 });
                 aId = att.id;
                 setAttendeeId(aId);
             }
+            const fullName = customerLastName
+                ? `${bookForm.customerName} ${customerLastName}`.trim()
+                : bookForm.customerName || "";
             await bookingApi.create({
                 ...bookForm,
+                customerName: fullName,
                 attendeeId: aId,
             } as BookingRequest);
             toast.success("Booking created successfully! 🎉");
@@ -142,6 +151,31 @@ export default function MyBookingsPage() {
             await loadData();
         } catch (err: any) {
             toast.error(err.message || "Failed to cancel booking");
+        }
+    };
+
+    const handlePayNow = async () => {
+        if (!payingBooking) return;
+        setPaying(true);
+        try {
+            const payment = await paymentApi.process({
+                bookingId: payingBooking.id,
+                amount: payingBooking.totalPrice ?? payingBooking.totalAmount ?? 0,
+                paymentMethod: "CREDIT_CARD",
+                paymentGateway: "MOCK_GATEWAY",
+            });
+            if (payment.paymentStatus === "SUCCESS") {
+                await bookingApi.confirm(payingBooking.id);
+                toast.success("Payment successful! Booking confirmed 🎉");
+            } else {
+                toast.error("Payment was declined. Please try again.");
+            }
+            setPayingBooking(null);
+            await loadData();
+        } catch (err: any) {
+            toast.error(err.message || "Payment failed. Please try again.");
+        } finally {
+            setPaying(false);
         }
     };
 
@@ -328,16 +362,27 @@ export default function MyBookingsPage() {
                                                             )}
                                                         </div>
                                                     </div>
-                                                    {booking.status === "PENDING" && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => setCancelDialogId(booking.id)}
-                                                            className="text-red-400 border-red-400/30 hover:bg-red-500/10 hover:border-red-400/60"
-                                                        >
-                                                            <XCircle className="mr-1.5 h-3.5 w-3.5" /> Cancel
-                                                        </Button>
-                                                    )}
+                                                    <div className="flex items-center gap-2">
+                                                        {booking.paymentStatus === "UNPAID" && booking.status !== "CANCELLED" && (
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() => setPayingBooking(booking)}
+                                                                className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm hover:shadow-emerald-600/30"
+                                                            >
+                                                                <CreditCard className="mr-1.5 h-3.5 w-3.5" /> Pay Now
+                                                            </Button>
+                                                        )}
+                                                        {booking.status === "PENDING" && (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => setCancelDialogId(booking.id)}
+                                                                className="text-red-400 border-red-400/30 hover:bg-red-500/10 hover:border-red-400/60"
+                                                            >
+                                                                <XCircle className="mr-1.5 h-3.5 w-3.5" /> Cancel
+                                                            </Button>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -389,13 +434,17 @@ export default function MyBookingsPage() {
                         )}
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-2">
-                                <Label>Your Name *</Label>
+                                <Label>First Name *</Label>
                                 <Input value={bookForm.customerName || ""} onChange={e => setBookForm({ ...bookForm, customerName: e.target.value })} className="bg-background/50" />
                             </div>
                             <div className="space-y-2">
-                                <Label>Quantity *</Label>
-                                <Input type="number" min={1} value={bookForm.quantity || 1} onChange={e => setBookForm({ ...bookForm, quantity: Number(e.target.value) })} className="bg-background/50" />
+                                <Label>Last Name</Label>
+                                <Input value={customerLastName} onChange={e => setCustomerLastName(e.target.value)} className="bg-background/50" />
                             </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Quantity *</Label>
+                            <Input type="number" min={1} value={bookForm.quantity || 1} onChange={e => setBookForm({ ...bookForm, quantity: Number(e.target.value) })} className="bg-background/50" />
                         </div>
                         <div className="space-y-2">
                             <Label>Email *</Label>
@@ -415,6 +464,46 @@ export default function MyBookingsPage() {
                         <Button onClick={handleBook} disabled={saving} className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white">
                             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Confirm Booking
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Pay Now Dialog */}
+            <Dialog open={!!payingBooking} onOpenChange={() => setPayingBooking(null)}>
+                <DialogContent className="max-w-md bg-card border-border/50">
+                    <DialogHeader>
+                        <DialogTitle className="gradient-text">Complete Payment</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        <div className="rounded-lg border border-border/50 bg-background/50 p-4 space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Booking Reference</span>
+                                <span className="font-mono text-violet-400 text-xs">{payingBooking?.bookingReference}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Tickets</span>
+                                <span>{payingBooking?.quantity} × ticket</span>
+                            </div>
+                            <div className="h-px bg-border/40 my-1" />
+                            <div className="flex justify-between font-semibold">
+                                <span>Total Amount</span>
+                                <span className="text-emerald-400 text-lg">
+                                    ${((payingBooking as any)?.totalPrice ?? payingBooking?.totalAmount)?.toFixed(2)}
+                                </span>
+                            </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground text-center">Payment will be processed securely via Mock Gateway</p>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setPayingBooking(null)} disabled={paying}>Cancel</Button>
+                        <Button
+                            onClick={handlePayNow}
+                            disabled={paying}
+                            className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white"
+                        >
+                            {paying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Confirm Payment
                         </Button>
                     </DialogFooter>
                 </DialogContent>

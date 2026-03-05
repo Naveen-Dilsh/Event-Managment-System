@@ -8,7 +8,7 @@ const SERVICE_URLS = {
     sponsorship: "http://localhost:8087",   // sponsorship-service
     loyalty: "http://localhost:8088",   // loyalty-service
     vendor: "http://localhost:8089",   // vendor-service
-    announcer: "http://localhost:8089",   // announcer-service (same port as vendor)
+    announcer: "http://localhost:8091",   // announcer-service
     users: "http://localhost:8090",   // user-service
 };
 
@@ -131,6 +131,10 @@ export const bookingApi = {
         apiRequest<BookingResponse>(`${SERVICE_URLS.booking}/api/bookings`, {
             method: "POST",
             body: JSON.stringify(data),
+        }),
+    confirm: (id: number) =>
+        apiRequest<BookingResponse>(`${SERVICE_URLS.booking}/api/bookings/${id}/confirm`, {
+            method: "PATCH",
         }),
     cancel: (id: number) =>
         apiRequest<BookingResponse>(`${SERVICE_URLS.booking}/api/bookings/${id}/cancel`, {
