@@ -1,140 +1,155 @@
+
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { Heart, Plus, Pencil, Trash2, Search, Loader2, Settings2 } from "lucide-react";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import {
+    Award, Search, RefreshCw, Loader2, Star, Shield, ExternalLink, Settings2, Plus, Pencil, Trash2
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
-    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
-import {
-    DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-    Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
-    Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loyaltyApi } from "@/lib/api";
+import { LoyaltyResponseDTO, LoyaltyAccountRequest } from "@/lib/types";
 import { toast } from "sonner";
-import type { LoyaltyAccountRequest, LoyaltyAccountResponse } from "@/lib/types";
 
 const emptyForm: LoyaltyAccountRequest = {
     attendeeId: 0,
     pointsBalance: 0,
     totalPointsEarned: 0,
-    membershipTier: "SILVER",
-    status: "ACTIVE",
+    membershipTier: "BASIC",
+    status: "ACTIVE"
 };
 
-const tiers = ["BRONZE", "SILVER", "GOLD", "PLATINUM"];
-const statuses = ["ACTIVE", "INACTIVE", "SUSPENDED"];
-
-const statusColors: Record<string, string> = {
-    ACTIVE: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    INACTIVE: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    SUSPENDED: "bg-red-500/10 text-red-400 border-red-500/20",
-};
-
-const tierColors: Record<string, string> = {
-    BRONZE: "bg-orange-900/40 text-orange-400 border-orange-900",
-    SILVER: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-    GOLD: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-    PLATINUM: "bg-slate-300/10 text-slate-300 border-slate-300/20",
-};
+const tiers = ["BASIC", "BRONZE", "SILVER", "GOLD", "PREMIUM", "VIP"];
+const statuses = ["ACTIVE", "SUSPENDED", "INACTIVE"];
 
 const availableColumns = [
-    { id: "id", label: "ID" },
+    { id: "accountId", label: "Acct ID" },
+    { id: "attendeeName", label: "Attendee Name" },
     { id: "attendeeId", label: "Attendee ID" },
-    { id: "tier", label: "Tier" },
-    { id: "points", label: "Points Balance" },
+    { id: "tier", label: "Membership Tier" },
+    { id: "balance", label: "Points Balance" },
     { id: "totalEarned", label: "Total Earned" },
-    { id: "status", label: "Status" },
 ];
 
-export default function LoyaltyPage() {
-    const [accounts, setAccounts] = useState<LoyaltyAccountResponse[]>([]);
+export default function AdminLoyaltyPage() {
+    const [accounts, setAccounts] = useState<LoyaltyResponseDTO[]>([]);
     const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [tierFilter, setTierFilter] = useState("ALL");
     const [dialogOpen, setDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [editing, setEditing] = useState<LoyaltyAccountResponse | null>(null);
-    const [deleting, setDeleting] = useState<LoyaltyAccountResponse | null>(null);
+    const [editing, setEditing] = useState<LoyaltyResponseDTO | null>(null);
+    const [deleting, setDeleting] = useState<LoyaltyResponseDTO | null>(null);
     const [form, setForm] = useState<LoyaltyAccountRequest>(emptyForm);
     const [saving, setSaving] = useState(false);
     const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(() => {
-        const defaultVisible = ["id", "attendeeId", "tier", "points", "totalEarned", "status"];
+        const defaultVisible = ["accountId", "attendeeName", "tier", "balance", "totalEarned"];
         return availableColumns.reduce((acc, col) => ({ ...acc, [col.id]: defaultVisible.includes(col.id) }), {});
     });
 
-    const load = useCallback(async () => {
-        try { setAccounts(await loyaltyApi.getAll()); }
-        catch (err: any) {
-            console.error(err);
-            toast.error(err.message || "Failed to load loyalty accounts");
-        } finally { setLoading(false); }
+    const loadAccounts = useCallback(async () => {
+        setLoading(true);
+        try {
+            const data = await loyaltyApi.getAll();
+            setAccounts(data || []);
+        } catch (error: any) {
+            toast.error("Failed to load loyalty accounts");
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
-    useEffect(() => { load(); }, [load]);
+    useEffect(() => { loadAccounts(); }, [loadAccounts]);
 
-    const filtered = accounts.filter((a) => {
-        const query = search.toLowerCase();
-        return (
-            a.attendeeId.toString().includes(query) ||
-            a.membershipTier.toLowerCase().includes(query) ||
-            a.status.toLowerCase().includes(query)
-        );
-    });
+    const filtered = useMemo(() => {
+        return accounts.filter((acc) => {
+            const matchesTier = tierFilter === "ALL" || acc.membershipTier === tierFilter;
+            const matchesSearch =
+                acc.attendeeName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                acc.id.toString() === searchQuery;
+            return matchesTier && matchesSearch;
+        });
+    }, [accounts, tierFilter, searchQuery]);
 
-    const handleCreate = () => { setEditing(null); setForm(emptyForm); setDialogOpen(true); };
+    const handleCreate = () => {
+        setEditing(null);
+        setForm(emptyForm);
+        setDialogOpen(true);
+    };
 
-    const handleEdit = (a: LoyaltyAccountResponse) => {
-        setEditing(a);
+    const handleEdit = (acc: LoyaltyResponseDTO) => {
+        setEditing(acc);
         setForm({
-            attendeeId: a.attendeeId,
-            pointsBalance: a.pointsBalance,
-            totalPointsEarned: a.totalPointsEarned,
-            membershipTier: a.membershipTier,
-            status: a.status,
+            attendeeId: acc.attendeeId,
+            pointsBalance: acc.pointsBalance,
+            totalPointsEarned: acc.totalPointsEarned,
+            membershipTier: acc.membershipTier || "BASIC",
+            status: acc.status || "ACTIVE",
         });
         setDialogOpen(true);
     };
 
     const handleSave = async () => {
-        if (!form.attendeeId) {
-            toast.error("Attendee ID is required");
-            return;
-        }
         setSaving(true);
         try {
             if (editing) {
                 await loyaltyApi.update(editing.id, form);
-                toast.success("Account updated successfully");
+                toast.success("Loyalty account updated");
             } else {
                 await loyaltyApi.create(form);
-                toast.success("Account created successfully");
+                toast.success("Loyalty account created");
             }
-            setDialogOpen(false); await load();
+            setDialogOpen(false);
+            await loadAccounts();
         } catch (err: any) {
             console.error(err);
-            toast.error(err.message || "Failed to save account");
-        } finally { setSaving(false); }
+            toast.error(err.response?.data?.message || err.message || "Something went wrong.");
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleDelete = async () => {
         if (!deleting) return;
         try {
             await loyaltyApi.delete(deleting.id);
-            toast.success("Account deleted successfully");
-            setDeleteDialogOpen(false); setDeleting(null); await load();
+            setDeleteDialogOpen(false);
+            setDeleting(null);
+            await loadAccounts();
+            toast.success("Loyalty account deleted");
         } catch (err: any) {
             console.error(err);
-            toast.error(err.message || "Failed to delete account");
+            toast.error(err.response?.data?.message || err.message || "Failed to delete account");
+        }
+    };
+
+    const getTierBadgeProps = (tier: string) => {
+        switch (tier?.toUpperCase()) {
+            case "VIP": return { className: "bg-amber-500/15 text-amber-500 border-amber-500/30", icon: <Star className="w-3 h-3 mr-1" /> };
+            case "PREMIUM": return { className: "bg-blue-500/15 text-blue-400 border-blue-500/30", icon: <Shield className="w-3 h-3 mr-1" /> };
+            case "BASIC":
+            case "BRONZE":
+            default: return { className: "bg-slate-500/15 text-slate-400 border-slate-500/30", icon: null };
         }
     };
 
@@ -142,19 +157,43 @@ export default function LoyaltyPage() {
         <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight gradient-text">Loyalty Rewards</h1>
-                    <p className="mt-1 text-muted-foreground">Manage attendee loyalty accounts and points</p>
+                    <h1 className="text-3xl font-bold tracking-tight gradient-text">
+                        Loyalty Program
+                    </h1>
+                    <p className="mt-1 text-muted-foreground">Manage attendee loyalty points and membership tiers.</p>
                 </div>
-                <Button onClick={handleCreate} className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-600/20 hover:shadow-violet-600/30 transition-all">
-                    <Plus className="mr-2 h-4 w-4" /> Add Account
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button onClick={loadAccounts} variant="outline" className="bg-card/50 border-border/50">
+                        <RefreshCw className="mr-2 h-4 w-4" /> Refresh
+                    </Button>
+                    <Button onClick={handleCreate} className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-600/20 hover:shadow-violet-600/30 transition-all">
+                        <Plus className="mr-2 h-4 w-4" /> Add Loyalty Manually
+                    </Button>
+                </div>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            {/* Filters */}
+            <div className="flex flex-wrap gap-3 items-center">
                 <div className="relative max-w-xs flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input placeholder="Search by Attendee ID, Tier..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-card/50 border-border/50" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search by name or ID..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9 bg-card/50 focus-visible:ring-amber-500 border-border/50"
+                    />
                 </div>
+                <Select value={tierFilter} onValueChange={setTierFilter}>
+                    <SelectTrigger className="w-[180px] bg-card/50 focus-visible:ring-amber-500 border-border/50">
+                        <SelectValue placeholder="Filter by Tier" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="ALL">All Tiers</SelectItem>
+                        <SelectItem value="VIP">VIP</SelectItem>
+                        <SelectItem value="PREMIUM">Premium</SelectItem>
+                        <SelectItem value="BASIC">Basic / Bronze</SelectItem>
+                    </SelectContent>
+                </Select>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="bg-card/50 border-border/50 hidden sm:flex">
@@ -179,10 +218,12 @@ export default function LoyaltyPage() {
                 </DropdownMenu>
             </div>
 
+            {/* Data Table */}
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
                 <CardHeader className="pb-2">
                     <CardTitle className="text-base font-semibold flex items-center gap-2">
-                        <Heart className="h-4 w-4 text-pink-400" /> Accounts ({filtered.length})
+                        <Award className="h-4 w-4 text-violet-400" />
+                        All Accounts ({filtered.length})
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -190,90 +231,157 @@ export default function LoyaltyPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow className="border-border/30 hover:bg-transparent">
-                                    {visibleColumns.id && <TableHead className="text-muted-foreground">ID</TableHead>}
+                                    {visibleColumns.accountId && <TableHead className="text-muted-foreground">Acct ID</TableHead>}
+                                    {visibleColumns.attendeeName && <TableHead className="text-muted-foreground">Attendee</TableHead>}
                                     {visibleColumns.attendeeId && <TableHead className="text-muted-foreground">Attendee ID</TableHead>}
                                     {visibleColumns.tier && <TableHead className="text-muted-foreground">Tier</TableHead>}
-                                    {visibleColumns.points && <TableHead className="text-muted-foreground">Points Balance</TableHead>}
-                                    {visibleColumns.totalEarned && <TableHead className="text-muted-foreground">Total Earned</TableHead>}
-                                    {visibleColumns.status && <TableHead className="text-muted-foreground">Status</TableHead>}
+                                    {visibleColumns.balance && <TableHead className="text-right text-muted-foreground">Balance</TableHead>}
+                                    {visibleColumns.totalEarned && <TableHead className="text-right text-muted-foreground">Total Earned</TableHead>}
                                     <TableHead className="text-right text-muted-foreground">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {loading ? Array.from({ length: 4 }).map((_, i) => (
-                                    <TableRow key={i} className="border-border/20">
-                                        {visibleColumns.id && <TableCell><Skeleton className="h-4 w-12" /></TableCell>}
-                                        {visibleColumns.attendeeId && <TableCell><Skeleton className="h-4 w-16" /></TableCell>}
-                                        {visibleColumns.tier && <TableCell><Skeleton className="h-4 w-20" /></TableCell>}
-                                        {visibleColumns.points && <TableCell><Skeleton className="h-4 w-16" /></TableCell>}
-                                        {visibleColumns.totalEarned && <TableCell><Skeleton className="h-4 w-16" /></TableCell>}
-                                        {visibleColumns.status && <TableCell><Skeleton className="h-5 w-20" /></TableCell>}
-                                        <TableCell><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
-                                    </TableRow>
-                                )) : filtered.length === 0 ? (
-                                    <TableRow><TableCell colSpan={7} className="h-32 text-center text-muted-foreground">No accounts found</TableCell></TableRow>
-                                ) : filtered.map((a) => (
-                                    <TableRow key={a.id} className="border-border/20 transition-colors hover:bg-accent/30">
-                                        {visibleColumns.id && <TableCell className="text-muted-foreground">#{a.id}</TableCell>}
-                                        {visibleColumns.attendeeId && <TableCell className="font-medium">#{a.attendeeId}</TableCell>}
-                                        {visibleColumns.tier && <TableCell>
-                                            <Badge variant="outline" className={tierColors[a.membershipTier] || ""}>
-                                                {a.membershipTier}
-                                            </Badge>
-                                        </TableCell>}
-                                        {visibleColumns.points && <TableCell className="font-medium text-pink-400">{a.pointsBalance}</TableCell>}
-                                        {visibleColumns.totalEarned && <TableCell className="text-muted-foreground">{a.totalPointsEarned}</TableCell>}
-                                        {visibleColumns.status && <TableCell>
-                                            <Badge variant="outline" className={statusColors[a.status] || ""}>{a.status}</Badge>
-                                        </TableCell>}
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-1">
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleEdit(a)}><Pencil className="h-3.5 w-3.5" /></Button>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-400" onClick={() => { setDeleting(a); setDeleteDialogOpen(true); }}><Trash2 className="h-3.5 w-3.5" /></Button>
-                                            </div>
+                                {loading ? (
+                                    Array.from({ length: 4 }).map((_, i) => (
+                                        <TableRow key={i} className="border-border/20">
+                                            {visibleColumns.accountId && <TableCell><Skeleton className="h-4 w-12" /></TableCell>}
+                                            {visibleColumns.attendeeName && <TableCell><Skeleton className="h-4 w-32" /></TableCell>}
+                                            {visibleColumns.attendeeId && <TableCell><Skeleton className="h-4 w-12" /></TableCell>}
+                                            {visibleColumns.tier && <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>}
+                                            {visibleColumns.balance && <TableCell><Skeleton className="h-5 w-16 ml-auto" /></TableCell>}
+                                            {visibleColumns.totalEarned && <TableCell><Skeleton className="h-4 w-12 ml-auto" /></TableCell>}
+                                            <TableCell><Skeleton className="h-8 w-16 ml-auto rounded-md" /></TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : filtered.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={Object.values(visibleColumns).filter(Boolean).length + 1} className="h-32 text-center text-muted-foreground">
+                                            No loyalty accounts found.
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                ) : (
+                                    filtered.map((acc) => {
+                                        const tierBadge = getTierBadgeProps(acc.membershipTier);
+                                        return (
+                                            <TableRow key={acc.id} className="border-border/20 transition-colors hover:bg-accent/30">
+                                                {visibleColumns.accountId && (
+                                                    <TableCell className="font-mono text-xs text-muted-foreground">
+                                                        #{acc.id}
+                                                    </TableCell>
+                                                )}
+                                                {visibleColumns.attendeeName && (
+                                                    <TableCell>
+                                                        <div className="font-medium">{acc.attendeeName || "Unknown"}</div>
+                                                    </TableCell>
+                                                )}
+                                                {visibleColumns.attendeeId && (
+                                                    <TableCell className="text-muted-foreground">
+                                                        {acc.attendeeId}
+                                                    </TableCell>
+                                                )}
+                                                {visibleColumns.tier && (
+                                                    <TableCell>
+                                                        <Badge variant="outline" className={`capitalize font-semibold ${tierBadge.className}`}>
+                                                            {tierBadge.icon} {acc.membershipTier?.toLowerCase() || 'basic'}
+                                                        </Badge>
+                                                    </TableCell>
+                                                )}
+                                                {visibleColumns.balance && (
+                                                    <TableCell className="text-right text-muted-foreground">
+                                                        {acc.pointsBalance?.toFixed(1) || "0.0"}
+                                                    </TableCell>
+                                                )}
+                                                {visibleColumns.totalEarned && (
+                                                    <TableCell className="text-right text-muted-foreground">
+                                                        {acc.totalPointsEarned?.toFixed(1) || "0.0"}
+                                                    </TableCell>
+                                                )}
+                                                <TableCell className="text-right">
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                                            onClick={() => handleEdit(acc)}
+                                                            title="Edit account"
+                                                        >
+                                                            <Pencil className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-muted-foreground hover:text-red-400"
+                                                            onClick={() => {
+                                                                setDeleting(acc);
+                                                                setDeleteDialogOpen(true);
+                                                            }}
+                                                            title="Delete account"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })
+                                )}
                             </TableBody>
                         </Table>
                     </div>
                 </CardContent>
             </Card>
 
+            {/* Create/Edit Dialog */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent className="max-w-md bg-card border-border/50">
-                    <DialogHeader><DialogTitle className="gradient-text">{editing ? "Edit Account" : "Add New Account"}</DialogTitle></DialogHeader>
+                    <DialogHeader>
+                        <DialogTitle className="gradient-text">
+                            {editing ? "Edit Loyalty Account" : "Add Loyalty Manually"}
+                        </DialogTitle>
+                    </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="space-y-2">
                             <Label>Attendee ID *</Label>
                             <Input
                                 type="number"
                                 value={form.attendeeId || ""}
-                                onChange={(e) => setForm({ ...form, attendeeId: Number(e.target.value) || 0 })}
+                                onChange={(e) => setForm({ ...form, attendeeId: Number(e.target.value) })}
                                 className="bg-background/50"
-                                disabled={!!editing} // Typically don't change attendee ID after creation
+                                disabled={!!editing}
                             />
                         </div>
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label>Points Balance</Label>
-                                <Input type="number" value={form.pointsBalance} onChange={(e) => setForm({ ...form, pointsBalance: Number(e.target.value) || 0 })} className="bg-background/50" />
+                                <Label>Points Balance *</Label>
+                                <Input
+                                    type="number"
+                                    step="0.1"
+                                    value={form.pointsBalance === 0 ? "" : form.pointsBalance}
+                                    onChange={(e) => setForm({ ...form, pointsBalance: Number(e.target.value) })}
+                                    className="bg-background/50"
+                                />
                             </div>
                             <div className="space-y-2">
-                                <Label>Total Earned</Label>
-                                <Input type="number" value={form.totalPointsEarned} onChange={(e) => setForm({ ...form, totalPointsEarned: Number(e.target.value) || 0 })} className="bg-background/50" />
+                                <Label>Total Earned *</Label>
+                                <Input
+                                    type="number"
+                                    step="0.1"
+                                    value={form.totalPointsEarned === 0 ? "" : form.totalPointsEarned}
+                                    onChange={(e) => setForm({ ...form, totalPointsEarned: Number(e.target.value) })}
+                                    className="bg-background/50"
+                                />
                             </div>
                         </div>
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label>Membership Tier</Label>
+                                <Label>Membership Tier *</Label>
                                 <Select value={form.membershipTier} onValueChange={(v) => setForm({ ...form, membershipTier: v })}>
-                                    <SelectTrigger className="bg-background/50"><SelectValue placeholder="Select tier" /></SelectTrigger>
+                                    <SelectTrigger className="bg-background/50"><SelectValue /></SelectTrigger>
                                     <SelectContent>{tiers.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <Label>Status</Label>
+                                <Label>Status *</Label>
                                 <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
                                     <SelectTrigger className="bg-background/50"><SelectValue /></SelectTrigger>
                                     <SelectContent>{statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
@@ -283,17 +391,22 @@ export default function LoyaltyPage() {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSave} disabled={saving} className="bg-gradient-to-r from-pink-600 to-rose-600 text-white">
-                            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{editing ? "Update" : "Create"}
+                        <Button onClick={handleSave} disabled={saving} className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white">
+                            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{editing ? "Update" : "Add Account"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
+            {/* Delete Confimation */}
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <DialogContent className="max-w-md bg-card border-border/50">
-                    <DialogHeader><DialogTitle>Delete Account</DialogTitle></DialogHeader>
-                    <p className="text-sm text-muted-foreground">Are you sure you want to delete account for Attendee <strong className="text-foreground">#{deleting?.attendeeId}</strong>?</p>
+                    <DialogHeader>
+                        <DialogTitle>Delete Account</DialogTitle>
+                    </DialogHeader>
+                    <p className="text-sm text-muted-foreground">
+                        Are you sure you want to delete the loyalty account for <strong className="text-foreground">{deleting?.attendeeName}</strong>?
+                    </p>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
                         <Button variant="destructive" onClick={handleDelete}>Delete</Button>

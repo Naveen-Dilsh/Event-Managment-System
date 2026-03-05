@@ -30,8 +30,15 @@ export default function LoginPage() {
         setLoading(true);
         try {
             const userData = await userApi.login({ email, password });
-            login(userData); // Save to context + localStorage
+
+            // Save user to context + localStorage
+            login(userData);
+
+            // Set cookie for middleware redirect
+            document.cookie = "isLoggedIn=true; path=/; max-age=86400";
+
             toast.success("Logged in successfully!");
+
             // Redirect based on role
             if (userData.role === "ADMIN") {
                 router.push("/admin");
@@ -51,7 +58,9 @@ export default function LoginPage() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-600/20">
                     <Sparkles className="h-6 w-6 text-white" />
                 </div>
-                <h1 className="text-2xl font-bold tracking-tight gradient-text">Welcome back</h1>
+                <h1 className="text-2xl font-bold tracking-tight gradient-text">
+                    Welcome back
+                </h1>
                 <p className="text-sm text-muted-foreground text-center">
                     Enter your credentials to access the EventFlow platform
                 </p>
@@ -75,6 +84,7 @@ export default function LoginPage() {
                                 />
                             </div>
                         </div>
+
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
                                 <Label htmlFor="password">Password</Label>
@@ -93,17 +103,26 @@ export default function LoginPage() {
                             </div>
                         </div>
                     </CardContent>
+
                     <CardFooter className="flex flex-col space-y-4">
                         <Button
                             type="submit"
                             className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-600/20"
                             disabled={loading}
                         >
-                            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Sign in"}
+                            {loading ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                "Sign in"
+                            )}
                         </Button>
+
                         <div className="text-center text-sm text-muted-foreground">
                             Don&apos;t have an account?{" "}
-                            <Link href="/register" className="font-medium text-violet-400 hover:text-violet-300 transition-colors">
+                            <Link
+                                href="/register"
+                                className="font-medium text-violet-400 hover:text-violet-300 transition-colors"
+                            >
                                 Sign up
                             </Link>
                         </div>

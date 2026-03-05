@@ -241,7 +241,7 @@ export default function BookingsPage() {
                                             {b.attendeeId && <div className="text-xs opacity-50">Attendee #{b.attendeeId}</div>}
                                         </TableCell>}
                                         {visibleColumns.quantity && <TableCell className="text-center font-medium">{b.quantity}</TableCell>}
-                                        {visibleColumns.total && <TableCell className="font-medium">${b.totalAmount}</TableCell>}
+                                        {visibleColumns.total && <TableCell className="font-medium">${(b.totalPrice ?? b.totalAmount)?.toFixed(2) ?? "—"}</TableCell>}
                                         {visibleColumns.bookingStatus && <TableCell>
                                             <Badge variant="outline" className={statusColors[b.status] || ""}>{b.status}</Badge>
                                         </TableCell>}

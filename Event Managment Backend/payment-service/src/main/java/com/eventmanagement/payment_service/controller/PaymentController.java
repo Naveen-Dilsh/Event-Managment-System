@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
@@ -17,10 +19,14 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
+    @GetMapping
+    public ResponseEntity<List<PaymentResponseDTO>> getAllPayments() {
+        return ResponseEntity.ok(paymentService.getAllPayments());
+    }
+
     @PostMapping
     public ResponseEntity<PaymentResponseDTO> processPayment(
-            @Valid @RequestBody PaymentRequestDTO requestDTO
-    ) {
+            @Valid @RequestBody PaymentRequestDTO requestDTO) {
         return new ResponseEntity<>(paymentService.processPayment(requestDTO), HttpStatus.CREATED);
     }
 
@@ -42,8 +48,17 @@ public class PaymentController {
     @PostMapping("/{paymentId}/refund")
     public ResponseEntity<PaymentResponseDTO> refundPayment(
             @PathVariable Long paymentId,
-            @Valid @RequestBody RefundRequestDTO refundRequestDTO
-    ) {
+            @Valid @RequestBody RefundRequestDTO refundRequestDTO) {
         return ResponseEntity.ok(paymentService.refundPayment(paymentId, refundRequestDTO));
+    }
+
+    @PatchMapping("/{id}/reject")
+    public ResponseEntity<PaymentResponseDTO> rejectPayment(@PathVariable Long id) {
+        return ResponseEntity.ok(paymentService.rejectPayment(id));
+    }
+
+    @PatchMapping("/{id}/accept")
+    public ResponseEntity<PaymentResponseDTO> acceptPayment(@PathVariable Long id) {
+        return ResponseEntity.ok(paymentService.acceptPayment(id));
     }
 }

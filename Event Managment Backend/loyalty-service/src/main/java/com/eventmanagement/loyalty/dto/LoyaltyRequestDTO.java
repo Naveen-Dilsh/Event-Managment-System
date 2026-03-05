@@ -7,8 +7,10 @@ import lombok.Data;
 public class LoyaltyRequestDTO {
     @NotNull(message = "Attendee ID is required")
     private Long attendeeId;
-    private Integer pointsBalance = 0;
-    private Integer totalPointsEarned = 0;
+    @NotNull(message = "Points balance is required")
+    private Double pointsBalance;
+    @NotNull(message = "Total points earned is required")
+    private Double totalPointsEarned;
     private String membershipTier = "BRONZE";
     private String status = "ACTIVE";
 }

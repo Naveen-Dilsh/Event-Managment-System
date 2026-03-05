@@ -1,13 +1,13 @@
 package com.eventmanagement.booking_service.service.impl;
 
 import com.eventmanagement.booking_service.client.EventServiceClient;
-import com.eventmanagement.booking_service.client.PaymentServiceClient;
+import com.eventmanagement.booking_service.client.LoyaltyServiceClient;
 import com.eventmanagement.booking_service.client.TicketingServiceClient;
 import com.eventmanagement.booking_service.dto.*;
 import com.eventmanagement.booking_service.entity.Booking;
 import com.eventmanagement.booking_service.exception.BookingNotFoundException;
 import com.eventmanagement.booking_service.exception.InsufficientTicketsException;
-import com.eventmanagement.booking_service.exception.PaymentFailedException;
+
 import com.eventmanagement.booking_service.repository.BookingRepository;
 import com.eventmanagement.booking_service.service.BookingService;
 import org.springframework.stereotype.Service;
@@ -23,16 +23,16 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final EventServiceClient eventServiceClient;
     private final TicketingServiceClient ticketingServiceClient;
-    private final PaymentServiceClient paymentServiceClient;
+    private final LoyaltyServiceClient loyaltyServiceClient;
 
     public BookingServiceImpl(BookingRepository bookingRepository,
             EventServiceClient eventServiceClient,
             TicketingServiceClient ticketingServiceClient,
-            PaymentServiceClient paymentServiceClient) {
+            LoyaltyServiceClient loyaltyServiceClient) {
         this.bookingRepository = bookingRepository;
         this.eventServiceClient = eventServiceClient;
         this.ticketingServiceClient = ticketingServiceClient;
-        this.paymentServiceClient = paymentServiceClient;
+        this.loyaltyServiceClient = loyaltyServiceClient;
     }
 
     // =====================================================================
@@ -193,6 +193,16 @@ public class BookingServiceImpl implements BookingService {
         }
 
         booking.setStatus("CONFIRMED");
+        booking.setPaymentStatus("PAID");
+
+        // Award loyalty points: 0.001 points per $1 (e.g., $5400 -> 5.4 points)
+        try {
+            double points = booking.getTotalPrice() * 0.001;
+            EarnPointsRequestDTO earnReq = new EarnPointsRequestDTO(booking.getAttendeeId(), points);
+            loyaltyServiceClient.earnPoints(earnReq);
+        } catch (Exception e) {
+            System.err.println("Warning: Could not award loyalty points for booking " + id + ": " + e.getMessage());
+        }
 
         return mapToResponse(bookingRepository.save(booking));
     }

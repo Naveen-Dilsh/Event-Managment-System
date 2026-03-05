@@ -4,6 +4,7 @@ import com.eventmanagement.loyalty.client.AttendeeServiceClient;
 import com.eventmanagement.loyalty.dto.AttendeeDTO;
 import com.eventmanagement.loyalty.dto.LoyaltyRequestDTO;
 import com.eventmanagement.loyalty.dto.LoyaltyResponseDTO;
+import com.eventmanagement.loyalty.dto.EarnPointsRequestDTO;
 import com.eventmanagement.loyalty.entity.LoyaltyAccount;
 import com.eventmanagement.loyalty.exception.LoyaltyAccountNotFoundException;
 import com.eventmanagement.loyalty.repository.LoyaltyRepository;
@@ -82,6 +83,42 @@ public class LoyaltyServiceImpl implements LoyaltyService {
             throw new LoyaltyAccountNotFoundException("Account not found: " + id);
         }
         loyaltyRepository.deleteById(id);
+    }
+
+    @Override
+    public LoyaltyResponseDTO earnPoints(EarnPointsRequestDTO dto) {
+        LoyaltyAccount account = loyaltyRepository.findByAttendeeId(dto.getAttendeeId())
+                .orElseGet(() -> {
+                    // Implicitly verify attendee exists
+                    try {
+                        attendeeServiceClient.getAttendeeById(dto.getAttendeeId());
+                    } catch (Exception e) {
+                        throw new RuntimeException("Attendee not found with ID: " + dto.getAttendeeId());
+                    }
+                    LoyaltyAccount newAccount = new LoyaltyAccount();
+                    newAccount.setAttendeeId(dto.getAttendeeId());
+                    newAccount.setPointsBalance(0.0);
+                    newAccount.setTotalPointsEarned(0.0);
+                    newAccount.setMembershipTier("Basic");
+                    newAccount.setStatus("ACTIVE");
+                    return loyaltyRepository.save(newAccount);
+                });
+
+        account.setPointsBalance(account.getPointsBalance() + dto.getPointsToEarn());
+        account.setTotalPointsEarned(account.getTotalPointsEarned() + dto.getPointsToEarn());
+
+        // Auto-update tier if needed
+        double total = account.getTotalPointsEarned();
+        if (total >= 100.0) {
+            account.setMembershipTier("VIP");
+        } else if (total >= 50.0) {
+            account.setMembershipTier("Premium");
+        } else {
+            account.setMembershipTier("Basic");
+        }
+
+        LoyaltyAccount updated = loyaltyRepository.save(account);
+        return mapToDTO(updated, getAttendeeName(updated.getAttendeeId()));
     }
 
     // Helper methods

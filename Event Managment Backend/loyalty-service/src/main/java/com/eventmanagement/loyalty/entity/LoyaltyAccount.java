@@ -17,10 +17,10 @@ public class LoyaltyAccount {
     private Long attendeeId;
 
     @Column(nullable = false)
-    private Integer pointsBalance = 0;
+    private Double pointsBalance = 0.0;
 
     @Column(nullable = false)
-    private Integer totalPointsEarned = 0;
+    private Double totalPointsEarned = 0.0;
 
     @Column(nullable = false)
     private String membershipTier = "BRONZE";
