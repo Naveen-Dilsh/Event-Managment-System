@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 import java.util.List;
 
 @RestController
@@ -39,12 +41,14 @@ public class TicketController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TicketResponseDTO> update(@PathVariable Long id, @Valid @RequestBody TicketRequestDTO request) {
+    public ResponseEntity<TicketResponseDTO> update(@PathVariable Long id,
+            @Valid @RequestBody TicketRequestDTO request) {
         return ResponseEntity.ok(ticketService.updateTicket(id, request));
     }
 
-    @PatchMapping("/{id}/reduce")
-    public ResponseEntity<Void> reduce(@PathVariable Long id, @RequestParam Integer quantity) {
+    @PutMapping("/{id}/reduce")
+    public ResponseEntity<Void> reduce(@PathVariable Long id, @RequestBody Map<String, Integer> request) {
+        Integer quantity = request.get("quantity");
         ticketService.reduceTicketQuantity(id, quantity);
         return ResponseEntity.noContent().build();
     }

@@ -79,9 +79,10 @@ export interface BookingRequest {
 
 export interface BookingResponse extends BookingRequest {
   id: number;
-  totalAmount: number;
+  totalAmount?: number;
+  totalPrice?: number;
   status: "PENDING" | "CONFIRMED" | "CANCELLED";
-  paymentStatus: "PENDING" | "PAID" | "REFUNDED" | "FAILED";
+  paymentStatus: "UNPAID" | "PENDING" | "PAID" | "REFUNDED" | "FAILED";
   bookingReference: string;
   createdAt?: string;
   updatedAt?: string;
