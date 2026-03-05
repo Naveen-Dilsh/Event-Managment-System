@@ -37,6 +37,9 @@ public class EventServiceImpl implements EventService {
         // ToDo : Validate Venue Exist and has Sufficient Capacity ?-------> OpenFeign
         validator.validateVenue(dto.getVenueId(), dto.getCapacity());
 
+        // Validate Announcer exists (if provided)
+        validator.validateAnnouncer(dto.getAnnouncerId());
+
         // Create event entity
         Event event = eventMapper.mapToEntity(dto);
         event.setAvailableSeats(dto.getCapacity()); // Initially all seats available
@@ -85,6 +88,9 @@ public class EventServiceImpl implements EventService {
             validator.validateVenue(dto.getVenueId(), dto.getCapacity());
         }
 
+        // Validate Announcer exists (if provided)
+        validator.validateAnnouncer(dto.getAnnouncerId());
+
         // Update event fields
         existEvent.setName(dto.getName());
         existEvent.setDescription(dto.getDescription());
@@ -97,6 +103,11 @@ public class EventServiceImpl implements EventService {
         existEvent.setOrganizerName(dto.getOrganizerName());
         existEvent.setOrganizerContact(dto.getOrganizerContact());
         existEvent.setImageUrl(dto.getImageUrl());
+        existEvent.setAnnouncerId(dto.getAnnouncerId()); // Update assigned announcer (null removes it)
+        // Update status if provided in the request
+        if (dto.getStatus() != null) {
+            existEvent.setStatus(Event.EventStatus.valueOf(dto.getStatus().name()));
+        }
         existEvent.setUpdatedAt(LocalDateTime.now());
 
         // Save to Database
@@ -128,8 +139,7 @@ public class EventServiceImpl implements EventService {
         if (event.getAvailableSeats() < quantity) {
             throw new IllegalArgumentException(
                     "Insufficient seats available. Requested: " + quantity +
-                            ", Available: " + event.getAvailableSeats()
-            );
+                            ", Available: " + event.getAvailableSeats());
         }
 
         // Reduce available seats

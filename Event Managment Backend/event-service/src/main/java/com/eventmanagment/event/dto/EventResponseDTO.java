@@ -20,6 +20,7 @@ public class EventResponseDTO {
     private LocalTime startTime;
     private LocalTime endTime;
     private Long venueId;
+    private Long announcerId;
     private String category;
     private Integer capacity;
     private Integer availableSeats;
