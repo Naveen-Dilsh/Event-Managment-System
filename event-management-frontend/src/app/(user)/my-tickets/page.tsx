@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Ticket, CalendarDays, Search, Sparkles } from "lucide-react";
+import { Ticket, CalendarDays, Search, Sparkles, CreditCard } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -160,13 +160,19 @@ export default function MyTicketsPage() {
                         <Input placeholder="Search ticket types..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 bg-card/50 border-border/50" />
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {loading ? (
-                            Array.from({ length: 3 }).map((_, i) => (
-                                <Card key={i} className="border-border/50 bg-card/50"><CardContent className="p-5"><Skeleton className="h-16 w-full" /></CardContent></Card>
+                            Array.from({ length: 6 }).map((_, i) => (
+                                <Card key={i} className="border-border/50 bg-card/50">
+                                    <CardContent className="p-5 space-y-3">
+                                        <Skeleton className="h-4 w-3/4" />
+                                        <Skeleton className="h-3 w-1/2" />
+                                        <Skeleton className="h-3 w-2/3" />
+                                    </CardContent>
+                                </Card>
                             ))
                         ) : filtered.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-20 text-center">
+                            <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
                                 <Ticket className="h-12 w-12 text-muted-foreground/40 mb-4" />
                                 <p className="text-lg font-medium text-muted-foreground">No tickets yet</p>
                                 <p className="text-sm text-muted-foreground/70">Book events to get your tickets!</p>
@@ -175,24 +181,44 @@ export default function MyTicketsPage() {
                             const event = events.find(e => e.id === ticket.eventId);
                             const booking = myBookings.find(b => b.ticketId === ticket.id);
                             return (
-                                <Card key={ticket.id} className="border-border/50 bg-card/50 backdrop-blur-sm transition-all hover:border-border/80">
-                                    <CardContent className="p-5">
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600/20 to-indigo-600/20">
-                                                    <Ticket className="h-5 w-5 text-violet-400" />
+                                <Card key={ticket.id} className="border-border/50 bg-card/50 backdrop-blur-sm transition-all hover:border-violet-500/30 hover:shadow-md hover:shadow-violet-950/20 flex flex-col overflow-hidden">
+                                    {/* Ticket top accent bar */}
+                                    <div className="h-1 w-full bg-gradient-to-r from-violet-600 to-indigo-600" />
+                                    <CardContent className="p-5 flex flex-col gap-3">
+                                        {/* Header */}
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600/20 to-indigo-600/20">
+                                                    <Ticket className="h-4 w-4 text-violet-400" />
                                                 </div>
-                                                <div>
-                                                    <p className="font-semibold text-foreground">{ticket.ticketType}</p>
-                                                    <p className="text-sm text-muted-foreground">{event?.name || `Event #${ticket.eventId}`}</p>
-                                                    <div className="flex gap-3 text-xs text-muted-foreground mt-1">
-                                                        <span>${ticket.price}/ticket</span>
-                                                        {booking && <span>Qty: {booking.quantity}</span>}
-                                                        {event && <span className="flex items-center gap-1"><CalendarDays className="h-3 w-3" />{new Date(event.eventDate).toLocaleDateString()}</span>}
-                                                    </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-semibold text-foreground truncate">{ticket.ticketType}</p>
+                                                    <p className="text-xs text-muted-foreground truncate">{event?.name || `Event #${ticket.eventId}`}</p>
                                                 </div>
                                             </div>
-                                            <Badge variant="outline" className={ticketStatusColor[ticket.status]}>{ticket.status}</Badge>
+                                            <Badge variant="outline" className={`shrink-0 text-[10px] ${ticketStatusColor[ticket.status]}`}>
+                                                {ticket.status}
+                                            </Badge>
+                                        </div>
+
+                                        {/* Details */}
+                                        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-muted-foreground border-t border-border/30 pt-3">
+                                            <span className="flex items-center gap-1.5">
+                                                <CreditCard className="h-3.5 w-3.5 shrink-0 text-violet-400/70" />
+                                                ${ticket.price}/ticket
+                                            </span>
+                                            {booking && (
+                                                <span className="flex items-center gap-1.5">
+                                                    <Ticket className="h-3.5 w-3.5 shrink-0 text-violet-400/70" />
+                                                    Qty: {booking.quantity}
+                                                </span>
+                                            )}
+                                            {event && (
+                                                <span className="flex items-center gap-1.5 col-span-2">
+                                                    <CalendarDays className="h-3.5 w-3.5 shrink-0 text-violet-400/70" />
+                                                    {new Date(event.eventDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                                                </span>
+                                            )}
                                         </div>
                                     </CardContent>
                                 </Card>

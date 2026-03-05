@@ -297,25 +297,22 @@ export default function MyBookingsPage() {
                         />
                     </div>
 
-                    {/* Bookings List */}
-                    <div className="space-y-3">
+                    {/* Bookings Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                         {loading
-                            ? Array.from({ length: 3 }).map((_, i) => (
+                            ? Array.from({ length: 6 }).map((_, i) => (
                                 <Card key={i} className="border-border/50 bg-card/50">
-                                    <CardContent className="p-5">
-                                        <div className="flex items-start justify-between">
-                                            <div className="space-y-2">
-                                                <Skeleton className="h-4 w-32" />
-                                                <Skeleton className="h-3 w-48" />
-                                            </div>
-                                            <Skeleton className="h-6 w-20" />
-                                        </div>
+                                    <CardContent className="p-5 space-y-3">
+                                        <Skeleton className="h-4 w-3/4" />
+                                        <Skeleton className="h-3 w-1/2" />
+                                        <Skeleton className="h-3 w-2/3" />
+                                        <Skeleton className="h-8 w-full mt-2" />
                                     </CardContent>
                                 </Card>
                             ))
                             : filteredBookings.length === 0
                                 ? (
-                                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                                    <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
                                         <ClipboardList className="h-12 w-12 text-muted-foreground/40 mb-4" />
                                         <p className="text-lg font-medium text-muted-foreground">No bookings yet</p>
                                         <p className="text-sm text-muted-foreground/70">Browse events and make your first booking!</p>
@@ -329,89 +326,92 @@ export default function MyBookingsPage() {
                                 : filteredBookings.map(booking => {
                                     const event = events.find(e => e.id === booking.eventId);
                                     return (
-                                        <Card key={booking.id} className="border-border/50 bg-card/50 backdrop-blur-sm transition-all hover:border-border/80">
-                                            <CardContent className="p-5">
-                                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                                    <div className="space-y-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <p className="font-semibold text-foreground">{event?.name || `Event #${booking.eventId}`}</p>
-                                                            <Badge variant="outline" className={bookingStatusColor[booking.status]}>
-                                                                {booking.status}
-                                                            </Badge>
-                                                        </div>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            Ref: <span className="font-mono text-xs text-violet-400">{booking.bookingReference}</span>
+                                        <Card key={booking.id} className="border-border/50 bg-card/50 backdrop-blur-sm transition-all hover:border-violet-500/30 hover:shadow-md hover:shadow-violet-950/20 flex flex-col">
+                                            <CardContent className="p-5 flex flex-col flex-1 gap-3">
+                                                {/* Header: Event name + booking status */}
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="min-w-0">
+                                                        <p className="font-semibold text-foreground truncate leading-snug">
+                                                            {event?.name || `Event #${booking.eventId}`}
                                                         </p>
-                                                        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pt-1">
-                                                            <span className="flex items-center gap-1">
-                                                                <Ticket className="h-3 w-3" /> {booking.quantity} ticket{booking.quantity > 1 ? "s" : ""}
-                                                            </span>
-                                                            <span className="flex items-center gap-1">
-                                                                <CreditCard className="h-3 w-3" />
-                                                                <Badge variant="outline" className={`text-[10px] ${paymentStatusColor[booking.paymentStatus]}`}>
-                                                                    {booking.paymentStatus}
-                                                                </Badge>
-                                                                ${(booking.totalPrice ?? booking.totalAmount)?.toFixed(2) ?? "—"}
-                                                            </span>
-                                                            {event && (
-                                                                <span className="flex items-center gap-1">
-                                                                    <CalendarDays className="h-3 w-3" />
-                                                                    {new Date(event.eventDate).toLocaleDateString()}
-                                                                </span>
-                                                            )}
-                                                        </div>
+                                                        <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">
+                                                            {booking.bookingReference}
+                                                        </p>
                                                     </div>
-                                                    <div className="flex items-center gap-2">
-                                                        {/* Pay Now — only if UNPAID and booking is still PENDING */}
-                                                        {booking.paymentStatus === "UNPAID" &&
-                                                            booking.status === "PENDING" && (
-                                                                <Button
-                                                                    size="sm"
-                                                                    onClick={() => setPayingBooking(booking)}
-                                                                    className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm hover:shadow-emerald-600/30"
-                                                                >
-                                                                    <CreditCard className="mr-1.5 h-3.5 w-3.5" /> Pay Now
-                                                                </Button>
-                                                            )}
-                                                        {/* Awaiting admin approval — payment submitted but not yet reviewed */}
-                                                        {booking.status === "PENDING" &&
-                                                            booking.paymentStatus !== "UNPAID" &&
-                                                            booking.paymentStatus !== "PAID" &&
-                                                            booking.paymentStatus !== "REFUNDED" && (
-                                                                <span className="flex items-center gap-1 text-xs font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-md px-2 py-1">
-                                                                    <Clock className="h-3.5 w-3.5" /> Awaiting Approval
-                                                                </span>
-                                                            )}
-                                                        {/* Confirmed / Paid */}
-                                                        {(booking.paymentStatus === "PAID" || booking.status === "CONFIRMED") && (
-                                                            <span className="flex items-center gap-1 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-md px-2 py-1">
-                                                                <CheckCircle2 className="h-3.5 w-3.5" /> Paid
+                                                    <Badge variant="outline" className={`shrink-0 text-[10px] ${bookingStatusColor[booking.status]}`}>
+                                                        {booking.status}
+                                                    </Badge>
+                                                </div>
+
+                                                {/* Details grid */}
+                                                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-muted-foreground border-t border-border/30 pt-3">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Ticket className="h-3.5 w-3.5 shrink-0 text-violet-400/70" />
+                                                        {booking.quantity} ticket{booking.quantity > 1 ? "s" : ""}
+                                                    </span>
+                                                    <span className="flex items-center gap-1.5">
+                                                        <CreditCard className="h-3.5 w-3.5 shrink-0 text-violet-400/70" />
+                                                        ${(booking.totalPrice ?? booking.totalAmount)?.toFixed(2) ?? "—"}
+                                                    </span>
+                                                    {event && (
+                                                        <span className="flex items-center gap-1.5 col-span-2">
+                                                            <CalendarDays className="h-3.5 w-3.5 shrink-0 text-violet-400/70" />
+                                                            {new Date(event.eventDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Payment status badge */}
+                                                <div>
+                                                    <Badge variant="outline" className={`text-[10px] ${paymentStatusColor[booking.paymentStatus]}`}>
+                                                        {booking.paymentStatus}
+                                                    </Badge>
+                                                </div>
+
+                                                {/* Actions — pushed to bottom */}
+                                                <div className="flex flex-wrap items-center gap-2 mt-auto pt-3 border-t border-border/30">
+                                                    {booking.paymentStatus === "UNPAID" && booking.status === "PENDING" && (
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => setPayingBooking(booking)}
+                                                            className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm hover:shadow-emerald-600/30"
+                                                        >
+                                                            <CreditCard className="mr-1.5 h-3.5 w-3.5" /> Pay Now
+                                                        </Button>
+                                                    )}
+                                                    {booking.status === "PENDING" &&
+                                                        booking.paymentStatus !== "UNPAID" &&
+                                                        booking.paymentStatus !== "PAID" &&
+                                                        booking.paymentStatus !== "REFUNDED" && (
+                                                            <span className="flex items-center gap-1 text-xs font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-md px-2 py-1">
+                                                                <Clock className="h-3.5 w-3.5" /> Awaiting Approval
                                                             </span>
                                                         )}
-                                                        {/* Refunded */}
-                                                        {booking.paymentStatus === "REFUNDED" && booking.status === "CANCELLED" && (
-                                                            <span className="flex items-center gap-1 text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-md px-2 py-1">
-                                                                <AlertCircle className="h-3.5 w-3.5" /> Refunded
-                                                            </span>
-                                                        )}
-                                                        {/* Rejected / Cancelled without refund */}
-                                                        {booking.status === "CANCELLED" && booking.paymentStatus !== "REFUNDED" && booking.paymentStatus !== "UNPAID" && (
-                                                            <span className="flex items-center gap-1 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-2 py-1">
-                                                                <XCircle className="h-3.5 w-3.5" /> Rejected
-                                                            </span>
-                                                        )}
-                                                        {/* Cancel button — only for PENDING/UNPAID bookings */}
-                                                        {booking.status === "PENDING" && booking.paymentStatus === "UNPAID" && (
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => setCancelDialogId(booking.id)}
-                                                                className="text-red-400 border-red-400/30 hover:bg-red-500/10 hover:border-red-400/60"
-                                                            >
-                                                                <XCircle className="mr-1.5 h-3.5 w-3.5" /> Cancel
-                                                            </Button>
-                                                        )}
-                                                    </div>
+                                                    {(booking.paymentStatus === "PAID" || booking.status === "CONFIRMED") && (
+                                                        <span className="flex items-center gap-1 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-md px-2 py-1">
+                                                            <CheckCircle2 className="h-3.5 w-3.5" /> Paid
+                                                        </span>
+                                                    )}
+                                                    {booking.paymentStatus === "REFUNDED" && booking.status === "CANCELLED" && (
+                                                        <span className="flex items-center gap-1 text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-md px-2 py-1">
+                                                            <AlertCircle className="h-3.5 w-3.5" /> Refunded
+                                                        </span>
+                                                    )}
+                                                    {booking.status === "CANCELLED" && booking.paymentStatus !== "REFUNDED" && booking.paymentStatus !== "UNPAID" && (
+                                                        <span className="flex items-center gap-1 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-2 py-1">
+                                                            <XCircle className="h-3.5 w-3.5" /> Rejected
+                                                        </span>
+                                                    )}
+                                                    {booking.status === "PENDING" && booking.paymentStatus === "UNPAID" && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => setCancelDialogId(booking.id)}
+                                                            className="text-red-400 border-red-400/30 hover:bg-red-500/10 hover:border-red-400/60"
+                                                        >
+                                                            <XCircle className="mr-1.5 h-3.5 w-3.5" /> Cancel
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </CardContent>
                                         </Card>
