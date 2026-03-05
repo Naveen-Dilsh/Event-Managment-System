@@ -37,11 +37,14 @@ public class TicketServiceImpl implements TicketService {
             if (event == null || event.getId() == null) {
                 throw new InvalidEventException("Event not found or unavailable");
             }
-            if (!"PUBLISHED".equalsIgnoreCase(event.getStatus())) {
-                throw new InvalidEventException("Event is not published");
+            if (!"PUBLISHED".equalsIgnoreCase(event.getStatus()) && !"ONGOING".equalsIgnoreCase(event.getStatus())) {
+                throw new InvalidEventException(
+                        "Event is not published or ongoing. Current status: " + event.getStatus());
             }
+        } catch (InvalidEventException e) {
+            throw e;
         } catch (Exception e) {
-            throw new InvalidEventException("Event not found or unavailable");
+            throw new InvalidEventException("Could not reach event service: " + e.getMessage());
         }
 
         // Validate dates
@@ -88,14 +91,21 @@ public class TicketServiceImpl implements TicketService {
     @Override
     @Transactional
     public TicketResponseDTO updateTicket(Long id, TicketRequestDTO dto) {
-        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new TicketNotFoundException("Ticket not found"));
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new TicketNotFoundException("Ticket not found"));
 
-        if (dto.getTicketType() != null) ticket.setTicketType(dto.getTicketType());
-        if (dto.getPrice() != null) ticket.setPrice(dto.getPrice());
-        if (dto.getDescription() != null) ticket.setDescription(dto.getDescription());
-        if (dto.getValidFrom() != null) ticket.setValidFrom(dto.getValidFrom());
-        if (dto.getValidUntil() != null) ticket.setValidUntil(dto.getValidUntil());
-        if (dto.getMaxPerBooking() != null) ticket.setMaxPerBooking(dto.getMaxPerBooking());
+        if (dto.getTicketType() != null)
+            ticket.setTicketType(dto.getTicketType());
+        if (dto.getPrice() != null)
+            ticket.setPrice(dto.getPrice());
+        if (dto.getDescription() != null)
+            ticket.setDescription(dto.getDescription());
+        if (dto.getValidFrom() != null)
+            ticket.setValidFrom(dto.getValidFrom());
+        if (dto.getValidUntil() != null)
+            ticket.setValidUntil(dto.getValidUntil());
+        if (dto.getMaxPerBooking() != null)
+            ticket.setMaxPerBooking(dto.getMaxPerBooking());
 
         if (dto.getQuantity() != null) {
             int oldQuantity = ticket.getQuantity();
@@ -128,7 +138,8 @@ public class TicketServiceImpl implements TicketService {
     @Override
     @Transactional
     public void reduceTicketQuantity(Long ticketId, Integer quantity) {
-        Ticket ticket = ticketRepository.findById(ticketId).orElseThrow(() -> new TicketNotFoundException("Ticket not found"));
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new TicketNotFoundException("Ticket not found"));
 
         if (ticket.getAvailableQuantity() == null || ticket.getAvailableQuantity() <= 0) {
             throw new InsufficientTicketsException("No tickets available");
@@ -154,7 +165,8 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public void deleteTicket(Long id) {
-        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new TicketNotFoundException("Ticket not found"));
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new TicketNotFoundException("Ticket not found"));
         ticketRepository.delete(ticket);
     }
 

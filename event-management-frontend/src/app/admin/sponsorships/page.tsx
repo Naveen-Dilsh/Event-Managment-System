@@ -23,6 +23,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { sponsorshipApi } from "@/lib/api";
 import type { SponsorshipRequest, SponsorshipResponse } from "@/lib/types";
+import { toast } from "sonner";
 
 const emptyForm: SponsorshipRequest = {
     eventId: 0,
@@ -103,16 +104,32 @@ export default function SponsorshipsPage() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            if (editing) await sponsorshipApi.update(editing.id, form);
-            else await sponsorshipApi.create(form);
+            if (editing) {
+                await sponsorshipApi.update(editing.id, form);
+                toast.success("Sponsorship updated successfully.");
+            } else {
+                await sponsorshipApi.create(form);
+                toast.success("Sponsorship created successfully.");
+            }
             setDialogOpen(false); await load();
-        } catch (err) { console.error(err); } finally { setSaving(false); }
+        } catch (err: any) {
+            console.error(err);
+            toast.error(err.response?.data?.message || err.message || "Something went wrong.");
+        } finally { setSaving(false); }
     };
 
     const handleDelete = async () => {
         if (!deleting) return;
-        try { await sponsorshipApi.delete(deleting.id); setDeleteDialogOpen(false); setDeleting(null); await load(); }
-        catch (err) { console.error(err); }
+        try {
+            await sponsorshipApi.delete(deleting.id);
+            setDeleteDialogOpen(false);
+            setDeleting(null);
+            await load();
+            toast.success("Sponsorship deleted successfully.");
+        } catch (err: any) {
+            console.error(err);
+            toast.error(err.response?.data?.message || err.message || "Failed to delete sponsorship.");
+        }
     };
 
     return (

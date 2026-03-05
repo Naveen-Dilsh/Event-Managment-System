@@ -26,9 +26,9 @@ public class BookingServiceImpl implements BookingService {
     private final PaymentServiceClient paymentServiceClient;
 
     public BookingServiceImpl(BookingRepository bookingRepository,
-                               EventServiceClient eventServiceClient,
-                               TicketingServiceClient ticketingServiceClient,
-                               PaymentServiceClient paymentServiceClient) {
+            EventServiceClient eventServiceClient,
+            TicketingServiceClient ticketingServiceClient,
+            PaymentServiceClient paymentServiceClient) {
         this.bookingRepository = bookingRepository;
         this.eventServiceClient = eventServiceClient;
         this.ticketingServiceClient = ticketingServiceClient;
@@ -61,8 +61,7 @@ public class BookingServiceImpl implements BookingService {
         // Step 3: Check sufficient ticket availability
         if (ticket.getAvailableQuantity() < dto.getQuantity()) {
             throw new InsufficientTicketsException(
-                    "Only " + ticket.getAvailableQuantity() + " tickets available. Requested: " + dto.getQuantity()
-            );
+                    "Only " + ticket.getAvailableQuantity() + " tickets available. Requested: " + dto.getQuantity());
         }
 
         // Step 4: Calculate total price (quantity x ticket price)
@@ -85,44 +84,20 @@ public class BookingServiceImpl implements BookingService {
 
         Booking savedBooking = bookingRepository.save(booking);
 
+        // Step 6: Reduce ticket quantity in Ticketing Service
         try {
-            // Step 6: Reduce ticket quantity in Ticketing Service
             ticketingServiceClient.reduceTicketQuantity(
                     dto.getTicketId(),
-                    Map.of("quantity", dto.getQuantity())
-            );
-
-            // Step 7: Process payment via Payment Service
-            PaymentRequestDTO paymentRequest = new PaymentRequestDTO();
-            paymentRequest.setBookingId(savedBooking.getId());
-            paymentRequest.setAmount(totalPrice);
-            paymentRequest.setPaymentMethod("CREDIT_CARD");
-
-            PaymentResponseDTO payment = paymentServiceClient.processPayment(paymentRequest);
-
-            // Step 8: Confirm booking if payment succeeded
-            if ("SUCCESS".equals(payment.getPaymentStatus())) {
-                savedBooking.setStatus("CONFIRMED");
-                savedBooking.setPaymentStatus("PAID");
-                savedBooking.setPaymentId(payment.getId());
-            } else {
-                savedBooking.setStatus("CANCELLED");
-                savedBooking.setPaymentStatus("FAILED");
-                bookingRepository.save(savedBooking);
-                throw new PaymentFailedException("Payment was rejected by the payment service");
-            }
-
-        } catch (PaymentFailedException | InsufficientTicketsException e) {
-            throw e;
+                    Map.of("quantity", dto.getQuantity()));
         } catch (Exception e) {
-            // Compensate: mark booking as cancelled if any downstream call fails
             savedBooking.setStatus("CANCELLED");
-            savedBooking.setPaymentStatus("FAILED");
             bookingRepository.save(savedBooking);
-            throw new PaymentFailedException("Booking failed due to a downstream error: " + e.getMessage());
+            throw new RuntimeException("Failed to reserve tickets: " + e.getMessage());
         }
 
+        // Booking is created as PENDING/UNPAID - payment handled separately via Pay Now
         return mapToResponse(bookingRepository.save(savedBooking));
+
     }
 
     // =====================================================================
@@ -149,7 +124,8 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     public BookingResponseDTO getBookingByReference(String bookingReference) {
         Booking booking = bookingRepository.findByBookingReference(bookingReference)
-                .orElseThrow(() -> new BookingNotFoundException("Booking not found with reference: " + bookingReference));
+                .orElseThrow(
+                        () -> new BookingNotFoundException("Booking not found with reference: " + bookingReference));
         return mapToResponse(booking);
     }
 
@@ -188,8 +164,7 @@ public class BookingServiceImpl implements BookingService {
         try {
             ticketingServiceClient.restoreTicketQuantity(
                     booking.getTicketId(),
-                    Map.of("quantity", booking.getQuantity())
-            );
+                    Map.of("quantity", booking.getQuantity()));
         } catch (Exception e) {
             // Log and continue - cancellation proceeds regardless
             System.err.println("Warning: could not restore ticket quantity for booking " + id + ": " + e.getMessage());

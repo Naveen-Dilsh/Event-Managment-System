@@ -7,4 +7,6 @@ public class PaymentRequestDTO {
     private Long bookingId;
     private Double amount;
     private String paymentMethod;
+    private String paymentGateway;
+    private String cardLastFour;
 }

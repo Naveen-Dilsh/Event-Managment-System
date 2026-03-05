@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Mic, Plus, Pencil, Trash2, Search, Loader2, Settings2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Mic, Plus, Pencil, Trash2, Search, Loader2, Settings2, Briefcase } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,7 @@ const availableColumns = [
 ];
 
 export default function AnnouncersPage() {
+    const router = useRouter();
     const [announcers, setAnnouncers] = useState<AnnouncerResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
@@ -215,6 +217,7 @@ export default function AnnouncersPage() {
                                         </TableCell>}
                                         <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-1">
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-blue-400" onClick={() => router.push(`/admin/announcer-works?announcerId=${a.id}`)} title="Past Work"><Briefcase className="h-3.5 w-3.5" /></Button>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleEdit(a)}><Pencil className="h-3.5 w-3.5" /></Button>
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-400" onClick={() => { setDeleting(a); setDeleteDialogOpen(true); }}><Trash2 className="h-3.5 w-3.5" /></Button>
                                             </div>
