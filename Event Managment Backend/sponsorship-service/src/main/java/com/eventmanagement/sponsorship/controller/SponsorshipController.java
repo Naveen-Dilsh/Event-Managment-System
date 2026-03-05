@@ -14,6 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/sponsorships")
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class SponsorshipController {
 
@@ -59,18 +60,17 @@ public class SponsorshipController {
             @PathVariable Long id,
             @RequestBody Map<String, String> body) {
         return ResponseEntity.ok(
-                sponsorshipService.updateSponsorshipStatus(id, body.get("status"))
-        );
+                sponsorshipService.updateSponsorshipStatus(id, body.get("status")));
     }
 
-    // PATCH /api/sponsorships/{id}/payment-status - partial update for payment status
+    // PATCH /api/sponsorships/{id}/payment-status - partial update for payment
+    // status
     @PatchMapping("/{id}/payment-status")
     public ResponseEntity<SponsorshipResponseDTO> updatePaymentStatus(
             @PathVariable Long id,
             @RequestBody Map<String, String> body) {
         return ResponseEntity.ok(
-                sponsorshipService.updatePaymentStatus(id, body.get("paymentStatus"))
-        );
+                sponsorshipService.updatePaymentStatus(id, body.get("paymentStatus")));
     }
 
     // DELETE /api/sponsorships/{id}

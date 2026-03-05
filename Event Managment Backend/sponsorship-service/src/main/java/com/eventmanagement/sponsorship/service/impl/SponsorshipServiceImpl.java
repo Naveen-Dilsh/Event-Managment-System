@@ -53,37 +53,108 @@ public class SponsorshipServiceImpl implements SponsorshipService {
 
     @Override
     public SponsorshipResponseDTO getSponsorshipById(Long id) {
-        return null;
+        Sponsorship s = sponsorshipRepository.findById(id)
+                .orElseThrow(() -> new SponsorshipNotFoundException("Sponsorship not found with ID: " + id));
+        String eventName = "Event " + s.getEventId();
+        try {
+            eventName = eventServiceClient.getEventById(s.getEventId()).getName();
+        } catch (Exception e) {
+        }
+        return mapToResponseDTO(s, eventName);
     }
 
     @Override
     public List<SponsorshipResponseDTO> getAllSponsorships() {
-        return List.of();
+        return sponsorshipRepository.findAll().stream()
+                .map(s -> {
+                    String eventName = "Event " + s.getEventId();
+                    try {
+                        eventName = eventServiceClient.getEventById(s.getEventId()).getName();
+                    } catch (Exception e) {
+                    }
+                    return mapToResponseDTO(s, eventName);
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<SponsorshipResponseDTO> getSponsorshipsByEventId(Long eventId) {
-        return List.of();
+        return sponsorshipRepository.findByEventId(eventId).stream()
+                .map(s -> {
+                    String eventName = "Event " + eventId;
+                    try {
+                        eventName = eventServiceClient.getEventById(eventId).getName();
+                    } catch (Exception e) {
+                    }
+                    return mapToResponseDTO(s, eventName);
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
     public SponsorshipResponseDTO updateSponsorship(Long id, SponsorshipRequestDTO dto) {
-        return null;
+        Sponsorship s = sponsorshipRepository.findById(id)
+                .orElseThrow(() -> new SponsorshipNotFoundException("Sponsorship not found with ID: " + id));
+
+        validateTier(dto.getSponsorshipTier());
+
+        s.setSponsorName(dto.getSponsorName());
+        s.setSponsorEmail(dto.getSponsorEmail());
+        s.setSponsorPhone(dto.getSponsorPhone());
+        s.setCompanyName(dto.getCompanyName());
+        s.setSponsorshipTier(dto.getSponsorshipTier().toUpperCase());
+        s.setSponsorshipAmount(dto.getSponsorshipAmount());
+        s.setCurrency(dto.getCurrency() != null ? dto.getCurrency() : "LKR");
+        s.setBenefits(dto.getBenefits());
+        s.setLogoUrl(dto.getLogoUrl());
+        s.setWebsiteUrl(dto.getWebsiteUrl());
+        s.setAgreementDate(dto.getAgreementDate());
+        s.setStartDate(dto.getStartDate());
+        s.setEndDate(dto.getEndDate());
+        s.setNotes(dto.getNotes());
+
+        Sponsorship updated = sponsorshipRepository.save(s);
+        String eventName = "Event " + s.getEventId();
+        try {
+            eventName = eventServiceClient.getEventById(s.getEventId()).getName();
+        } catch (Exception e) {
+        }
+        return mapToResponseDTO(updated, eventName);
     }
 
     @Override
     public SponsorshipResponseDTO updateSponsorshipStatus(Long id, String status) {
-        return null;
+        Sponsorship s = sponsorshipRepository.findById(id)
+                .orElseThrow(() -> new SponsorshipNotFoundException("Sponsorship not found with ID: " + id));
+        s.setStatus(status);
+        Sponsorship updated = sponsorshipRepository.save(s);
+        String eventName = "Event " + s.getEventId();
+        try {
+            eventName = eventServiceClient.getEventById(s.getEventId()).getName();
+        } catch (Exception e) {
+        }
+        return mapToResponseDTO(updated, eventName);
     }
 
     @Override
     public SponsorshipResponseDTO updatePaymentStatus(Long id, String paymentStatus) {
-        return null;
+        Sponsorship s = sponsorshipRepository.findById(id)
+                .orElseThrow(() -> new SponsorshipNotFoundException("Sponsorship not found with ID: " + id));
+        s.setPaymentStatus(paymentStatus);
+        Sponsorship updated = sponsorshipRepository.save(s);
+        String eventName = "Event " + s.getEventId();
+        try {
+            eventName = eventServiceClient.getEventById(s.getEventId()).getName();
+        } catch (Exception e) {
+        }
+        return mapToResponseDTO(updated, eventName);
     }
 
     @Override
     public void deleteSponsorship(Long id) {
-
+        Sponsorship s = sponsorshipRepository.findById(id)
+                .orElseThrow(() -> new SponsorshipNotFoundException("Sponsorship not found with ID: " + id));
+        sponsorshipRepository.delete(s);
     }
 
     // Other methods (getById, update, delete) follow the same structure
