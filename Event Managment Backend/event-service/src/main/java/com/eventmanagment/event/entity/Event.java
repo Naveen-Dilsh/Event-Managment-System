@@ -61,7 +61,7 @@ public class Event {
     @Column(name = "organizer_contact", nullable = false, length = 100)
     private String organizerContact;
 
-    @Column(name = "image_url", length = 500)
+    @Column(name = "image_url", columnDefinition = "LONGTEXT")
     private String imageUrl;
 
     @CreationTimestamp
