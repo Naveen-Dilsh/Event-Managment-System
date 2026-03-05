@@ -9,8 +9,8 @@ public class LoyaltyResponseDTO {
     private Long id;
     private Long attendeeId;
     private String attendeeName; // from Feign
-    private Integer pointsBalance;
-    private Integer totalPointsEarned;
+    private Double pointsBalance;
+    private Double totalPointsEarned;
     private String membershipTier;
     private String status;
     private LocalDateTime createdAt;

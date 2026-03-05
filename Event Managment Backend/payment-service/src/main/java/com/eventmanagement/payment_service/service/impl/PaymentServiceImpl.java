@@ -15,7 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +28,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public PaymentResponseDTO processPayment(PaymentRequestDTO requestDTO) {
 
-        // Step 1: Create Payment entity (PENDING)
+        // Step 1: Create Payment entity (PROCESSING)
         Payment payment = Payment.builder()
                 .bookingId(requestDTO.getBookingId())
                 .amount(requestDTO.getAmount())
@@ -41,30 +42,31 @@ public class PaymentServiceImpl implements PaymentService {
         payment = paymentRepository.save(payment);
 
         try {
-            // Step 3: Call gateway (Mock)
+            // Step 3: Call gateway (Mock) — get transaction ID but keep PROCESSING
+            // Admin must explicitly accept before status becomes SUCCESS
             String transactionId = paymentGatewayService.processPayment(requestDTO);
-
-            // Step 4: Update payment success fields
             payment.setTransactionId(transactionId);
-            payment.setPaymentStatus(PaymentStatus.SUCCESS);
-            payment.setPaymentDate(LocalDateTime.now());
-            payment.setFailureReason(null);
+            // Status stays PROCESSING — awaiting admin approval
 
         } catch (Exception ex) {
-
-            // Step 5: Update failure fields
             payment.setPaymentStatus(PaymentStatus.FAILED);
             payment.setFailureReason(ex.getMessage());
-
             paymentRepository.save(payment);
-
             throw new PaymentFailedException("Payment failed: " + ex.getMessage());
         }
 
-        // Step 6: Save final state
+        // Step 4: Save with transactionId (still PROCESSING)
         payment = paymentRepository.save(payment);
 
         return mapToResponseDTO(payment);
+    }
+
+    @Override
+    public List<PaymentResponseDTO> getAllPayments() {
+        return paymentRepository.findAll()
+                .stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -86,7 +88,8 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public PaymentResponseDTO getPaymentByTransactionId(String transactionId) {
         Payment payment = paymentRepository.findByTransactionId(transactionId)
-                .orElseThrow(() -> new PaymentNotFoundException("Payment not found for transactionId: " + transactionId));
+                .orElseThrow(
+                        () -> new PaymentNotFoundException("Payment not found for transactionId: " + transactionId));
 
         return mapToResponseDTO(payment);
     }
@@ -120,6 +123,40 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setRefundAmount(refundAmount);
         payment.setRefundDate(LocalDateTime.now());
 
+        payment = paymentRepository.save(payment);
+
+        return mapToResponseDTO(payment);
+    }
+
+    @Override
+    public PaymentResponseDTO rejectPayment(Long id) {
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new PaymentNotFoundException("Payment not found with id: " + id));
+
+        if (payment.getPaymentStatus() != PaymentStatus.PROCESSING) {
+            throw new PaymentFailedException(
+                    "Only PROCESSING payments can be rejected. Current status: " + payment.getPaymentStatus());
+        }
+
+        payment.setPaymentStatus(PaymentStatus.REJECTED);
+        payment.setFailureReason("Rejected by admin");
+        payment = paymentRepository.save(payment);
+
+        return mapToResponseDTO(payment);
+    }
+
+    @Override
+    public PaymentResponseDTO acceptPayment(Long id) {
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new PaymentNotFoundException("Payment not found with id: " + id));
+
+        if (payment.getPaymentStatus() != PaymentStatus.PROCESSING) {
+            throw new PaymentFailedException(
+                    "Only PROCESSING payments can be accepted. Current status: " + payment.getPaymentStatus());
+        }
+
+        payment.setPaymentStatus(PaymentStatus.SUCCESS);
+        payment.setPaymentDate(LocalDateTime.now());
         payment = paymentRepository.save(payment);
 
         return mapToResponseDTO(payment);

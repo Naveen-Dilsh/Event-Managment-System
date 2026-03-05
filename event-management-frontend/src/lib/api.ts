@@ -171,6 +171,7 @@ export const attendeeApi = {
 import type { PaymentRequest, PaymentResponse, RefundRequest } from "./types";
 
 export const paymentApi = {
+    getAll: () => apiRequest<PaymentResponse[]>(`${SERVICE_URLS.payment}/api/payments`),
     getById: (id: number) =>
         apiRequest<PaymentResponse>(`${SERVICE_URLS.payment}/api/payments/${id}`),
     getByBooking: (bookingId: number) =>
@@ -188,6 +189,14 @@ export const paymentApi = {
         apiRequest<PaymentResponse>(`${SERVICE_URLS.payment}/api/payments/${paymentId}/refund`, {
             method: "POST",
             body: JSON.stringify(data),
+        }),
+    reject: (paymentId: number) =>
+        apiRequest<PaymentResponse>(`${SERVICE_URLS.payment}/api/payments/${paymentId}/reject`, {
+            method: "PATCH",
+        }),
+    accept: (paymentId: number) =>
+        apiRequest<PaymentResponse>(`${SERVICE_URLS.payment}/api/payments/${paymentId}/accept`, {
+            method: "PATCH",
         }),
 };
 
@@ -273,20 +282,20 @@ export const userApi = {
 };
 
 // ==================== Loyalty Service ====================
-import type { LoyaltyAccountRequest, LoyaltyAccountResponse } from "./types";
+import type { LoyaltyAccountRequest, LoyaltyResponseDTO } from "./types";
 
 export const loyaltyApi = {
-    getAll: () => apiRequest<LoyaltyAccountResponse[]>(`${SERVICE_URLS.loyalty}/api/loyalty`),
-    getById: (id: number) => apiRequest<LoyaltyAccountResponse>(`${SERVICE_URLS.loyalty}/api/loyalty/${id}`),
+    getAll: () => apiRequest<LoyaltyResponseDTO[]>(`${SERVICE_URLS.loyalty}/api/loyalty`),
+    getById: (id: number) => apiRequest<LoyaltyResponseDTO>(`${SERVICE_URLS.loyalty}/api/loyalty/${id}`),
     getByAttendee: (attendeeId: number) =>
-        apiRequest<LoyaltyAccountResponse>(`${SERVICE_URLS.loyalty}/api/loyalty/attendee/${attendeeId}`),
+        apiRequest<LoyaltyResponseDTO>(`${SERVICE_URLS.loyalty}/api/loyalty/attendee/${attendeeId}`),
     create: (data: LoyaltyAccountRequest) =>
-        apiRequest<LoyaltyAccountResponse>(`${SERVICE_URLS.loyalty}/api/loyalty`, {
+        apiRequest<LoyaltyResponseDTO>(`${SERVICE_URLS.loyalty}/api/loyalty`, {
             method: "POST",
             body: JSON.stringify(data),
         }),
     update: (id: number, data: LoyaltyAccountRequest) =>
-        apiRequest<LoyaltyAccountResponse>(`${SERVICE_URLS.loyalty}/api/loyalty/${id}`, {
+        apiRequest<LoyaltyResponseDTO>(`${SERVICE_URLS.loyalty}/api/loyalty/${id}`, {
             method: "PUT",
             body: JSON.stringify(data),
         }),

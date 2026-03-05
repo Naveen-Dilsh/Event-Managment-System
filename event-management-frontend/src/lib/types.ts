@@ -79,8 +79,8 @@ export interface BookingRequest {
 
 export interface BookingResponse extends BookingRequest {
   id: number;
-  totalAmount?: number;
   totalPrice?: number;
+  totalAmount?: number; // alias — backend returns totalPrice
   status: "PENDING" | "CONFIRMED" | "CANCELLED";
   paymentStatus: "UNPAID" | "PENDING" | "PAID" | "REFUNDED" | "FAILED";
   bookingReference: string;
@@ -117,7 +117,7 @@ export interface PaymentRequest {
 
 export interface PaymentResponse extends PaymentRequest {
   id: number;
-  paymentStatus: "PROCESSING" | "SUCCESS" | "FAILED" | "REFUNDED" | "PARTIALLY_REFUNDED";
+  paymentStatus: "PENDING" | "PROCESSING" | "SUCCESS" | "FAILED" | "REFUNDED" | "PARTIALLY_REFUNDED" | "REJECTED";
   transactionId: string;
   paymentDate: string;
   cardLastFour?: string;
@@ -243,4 +243,25 @@ export interface AnnouncerWorkResponse extends AnnouncerWorkRequest {
   id: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+// ==================== Loyalty Service ====================
+export interface LoyaltyRequestDTO {
+  attendeeId: number;
+  pointsBalance: number;
+  totalPointsEarned: number;
+  membershipTier?: string;
+  status?: string;
+}
+
+export interface LoyaltyResponseDTO {
+  id: number;
+  attendeeId: number;
+  attendeeName: string;
+  pointsBalance: number;
+  totalPointsEarned: number;
+  membershipTier: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
 }

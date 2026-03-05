@@ -31,6 +31,7 @@ const bookingStatusColor: Record<string, string> = {
 };
 
 const paymentStatusColor: Record<string, string> = {
+    UNPAID: "bg-amber-500/10 text-amber-400 border-amber-500/20",
     PENDING: "bg-amber-500/10 text-amber-400 border-amber-500/20",
     PAID: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
     REFUNDED: "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -53,6 +54,8 @@ export default function MyBookingsPage() {
     const [attendeeId, setAttendeeId] = useState<number | null>(null);
     const [payingBooking, setPayingBooking] = useState<BookingResponse | null>(null);
     const [paying, setPaying] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState("CREDIT_CARD");
+    const [paymentGateway, setPaymentGateway] = useState("MOCK_GATEWAY");
 
     const [bookForm, setBookForm] = useState<Partial<BookingRequest>>({
         eventId: bookEventId ? Number(bookEventId) : undefined,
@@ -158,18 +161,14 @@ export default function MyBookingsPage() {
         if (!payingBooking) return;
         setPaying(true);
         try {
-            const payment = await paymentApi.process({
+            await paymentApi.process({
                 bookingId: payingBooking.id,
                 amount: payingBooking.totalPrice ?? payingBooking.totalAmount ?? 0,
-                paymentMethod: "CREDIT_CARD",
-                paymentGateway: "MOCK_GATEWAY",
+                paymentMethod: paymentMethod,
+                paymentGateway: paymentGateway,
             });
-            if (payment.paymentStatus === "SUCCESS") {
-                await bookingApi.confirm(payingBooking.id);
-                toast.success("Payment successful! Booking confirmed 🎉");
-            } else {
-                toast.error("Payment was declined. Please try again.");
-            }
+            // Payment submitted — admin will review and approve/reject
+            toast.success("Payment submitted! Awaiting admin approval");
             setPayingBooking(null);
             await loadData();
         } catch (err: any) {
@@ -352,7 +351,7 @@ export default function MyBookingsPage() {
                                                                 <Badge variant="outline" className={`text-[10px] ${paymentStatusColor[booking.paymentStatus]}`}>
                                                                     {booking.paymentStatus}
                                                                 </Badge>
-                                                                ${booking.totalAmount?.toFixed(2)}
+                                                                ${(booking.totalPrice ?? booking.totalAmount)?.toFixed(2) ?? "—"}
                                                             </span>
                                                             {event && (
                                                                 <span className="flex items-center gap-1">
@@ -363,16 +362,46 @@ export default function MyBookingsPage() {
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        {booking.paymentStatus === "UNPAID" && booking.status !== "CANCELLED" && (
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={() => setPayingBooking(booking)}
-                                                                className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm hover:shadow-emerald-600/30"
-                                                            >
-                                                                <CreditCard className="mr-1.5 h-3.5 w-3.5" /> Pay Now
-                                                            </Button>
+                                                        {/* Pay Now — only if UNPAID and booking is still PENDING */}
+                                                        {booking.paymentStatus === "UNPAID" &&
+                                                            booking.status === "PENDING" && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => setPayingBooking(booking)}
+                                                                    className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm hover:shadow-emerald-600/30"
+                                                                >
+                                                                    <CreditCard className="mr-1.5 h-3.5 w-3.5" /> Pay Now
+                                                                </Button>
+                                                            )}
+                                                        {/* Awaiting admin approval — payment submitted but not yet reviewed */}
+                                                        {booking.status === "PENDING" &&
+                                                            booking.paymentStatus !== "UNPAID" &&
+                                                            booking.paymentStatus !== "PAID" &&
+                                                            booking.paymentStatus !== "REFUNDED" && (
+                                                                <span className="flex items-center gap-1 text-xs font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-md px-2 py-1">
+                                                                    <Clock className="h-3.5 w-3.5" /> Awaiting Approval
+                                                                </span>
+                                                            )}
+                                                        {/* Confirmed / Paid */}
+                                                        {(booking.paymentStatus === "PAID" || booking.status === "CONFIRMED") && (
+                                                            <span className="flex items-center gap-1 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-md px-2 py-1">
+                                                                <CheckCircle2 className="h-3.5 w-3.5" /> Paid
+                                                            </span>
                                                         )}
-                                                        {booking.status === "PENDING" && (
+                                                        {/* Refunded */}
+                                                        {booking.paymentStatus === "REFUNDED" && booking.status === "CANCELLED" && (
+                                                            <span className="flex items-center gap-1 text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-md px-2 py-1">
+                                                                <AlertCircle className="h-3.5 w-3.5" /> Refunded
+                                                            </span>
+                                                        )}
+                                                        {/* Rejected / Cancelled without refund */}
+                                                        {booking.status === "CANCELLED" && booking.paymentStatus !== "REFUNDED" && booking.paymentStatus !== "UNPAID" && (
+                                                            <span className="flex items-center gap-1 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-2 py-1">
+                                                                <XCircle className="h-3.5 w-3.5" /> Rejected
+                                                            </span>
+                                                        )}
+                                                        {/* Cancel button — only for PENDING/UNPAID bookings */}
+                                                        {booking.status === "PENDING" && booking.paymentStatus === "UNPAID" && (
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
@@ -493,7 +522,38 @@ export default function MyBookingsPage() {
                                 </span>
                             </div>
                         </div>
-                        <p className="text-xs text-muted-foreground text-center">Payment will be processed securely via Mock Gateway</p>
+
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                            <div className="space-y-1.5">
+                                <Label className="text-xs text-muted-foreground">Payment Method</Label>
+                                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                                    <SelectTrigger className="bg-background/50 h-9">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
+                                        <SelectItem value="DEBIT_CARD">Debit Card</SelectItem>
+                                        <SelectItem value="PAYPAL">PayPal</SelectItem>
+                                        <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-xs text-muted-foreground">Payment Gateway</Label>
+                                <Select value={paymentGateway} onValueChange={setPaymentGateway}>
+                                    <SelectTrigger className="bg-background/50 h-9">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="MOCK_GATEWAY">Mock Gateway</SelectItem>
+                                        <SelectItem value="STRIPE">Stripe</SelectItem>
+                                        <SelectItem value="PAYPAL">PayPal</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <p className="text-xs text-muted-foreground text-center pt-2">Payment will be processed securely via {paymentGateway === 'MOCK_GATEWAY' ? 'Mock Gateway' : paymentGateway === 'STRIPE' ? 'Stripe' : 'PayPal'}</p>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setPayingBooking(null)} disabled={paying}>Cancel</Button>

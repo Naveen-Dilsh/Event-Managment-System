@@ -2,6 +2,7 @@ package com.eventmanagement.loyalty.controller;
 
 import com.eventmanagement.loyalty.dto.LoyaltyRequestDTO;
 import com.eventmanagement.loyalty.dto.LoyaltyResponseDTO;
+import com.eventmanagement.loyalty.dto.EarnPointsRequestDTO;
 import com.eventmanagement.loyalty.service.LoyaltyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,11 @@ public class LoyaltyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(loyaltyService.createAccount(dto));
     }
 
+    @PostMapping("/earn")
+    public ResponseEntity<LoyaltyResponseDTO> earnPoints(@Valid @RequestBody EarnPointsRequestDTO dto) {
+        return ResponseEntity.ok(loyaltyService.earnPoints(dto));
+    }
+
     @GetMapping
     public ResponseEntity<List<LoyaltyResponseDTO>> getAll() {
         return ResponseEntity.ok(loyaltyService.getAllAccounts());
@@ -40,7 +46,7 @@ public class LoyaltyController {
 
     @PutMapping("/{id}")
     public ResponseEntity<LoyaltyResponseDTO> update(@PathVariable Long id,
-                                                     @Valid @RequestBody LoyaltyRequestDTO dto) {
+            @Valid @RequestBody LoyaltyRequestDTO dto) {
         return ResponseEntity.ok(loyaltyService.updateAccount(id, dto));
     }
 
