@@ -8,6 +8,11 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+/**
+ * Data Transfer Object for creating or updating an Event.
+ * Contains validation rules to ensure incoming event requests are
+ * well-formatted.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
