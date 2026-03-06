@@ -18,6 +18,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation of the {@link EventService} interface.
+ * Handles the business logic for creating, updating, retrieving, deleting and
+ * managing seats for events.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

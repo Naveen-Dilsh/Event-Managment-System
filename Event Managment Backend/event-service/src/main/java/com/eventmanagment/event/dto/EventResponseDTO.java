@@ -8,6 +8,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+/**
+ * Data Transfer Object for returning Event details to clients.
+ * Encapsulates the event data without exposing internal entity details.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

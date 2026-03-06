@@ -10,6 +10,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+/**
+ * Entity representing an Event in the system.
+ * Maps to the "event" table in the database and holds all details of an event.
+ */
 @Entity
 @Table(name = "event")
 @Data
